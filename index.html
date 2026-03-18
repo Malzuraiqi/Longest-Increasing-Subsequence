@@ -1,0 +1,1159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>LIS Algorithm Explorer — BCS 309</title>
+<style>
+/* ═══════════════════════════════════════════
+   DESIGN TOKENS (matching instructor style)
+   ═══════════════════════════════════════════ */
+:root{
+  --bg:#0b1020;
+  --text:#e8ecff;
+  --muted:#b7c0ff;
+  --c1:#6aa9ff;
+  --c2:#64f0c8;
+  --c3:#ffd166;
+  --c4:#ff9f43;
+  --c5:#ff5c7a;
+  --c6:#c77dff;
+  --c7:#ff6b6b;
+  --stroke:rgba(255,255,255,0.12);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+  background:radial-gradient(1200px 800px at 20% 0%,#14204a 0%,var(--bg) 45%,#070a14 100%);
+  color:var(--text);min-height:100vh;
+}
+h1{text-align:center;font-size:22px;font-weight:700;margin:18px 0 4px;letter-spacing:-.3px;}
+.subtitle{text-align:center;font-size:12px;color:var(--muted);margin:0 0 14px;}
+
+/* ── Layout ── */
+.wrap{max-width:1280px;margin:0 auto;padding:0 14px 18px;display:grid;grid-template-columns:420px 1fr;gap:14px;}
+@media(max-width:980px){.wrap{grid-template-columns:1fr;}}
+.full-wrap{max-width:1280px;margin:0 auto;padding:0 14px 14px;}
+
+/* ── Cards ── */
+.card{
+  background:linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.03));
+  border:1px solid rgba(255,255,255,0.10);border-radius:18px;
+  box-shadow:0 10px 30px rgba(0,0,0,0.25);overflow:hidden;
+}
+.card h2{margin:0;padding:14px 14px 10px;font-size:16px;background:rgba(255,255,255,0.03);border-bottom:1px solid rgba(255,255,255,0.08);}
+
+/* ── Tabs ── */
+.tabBar{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:10px 14px 0;}
+.tab{padding:8px 6px;border-radius:10px;border:1px solid rgba(255,255,255,0.08);background:rgba(0,0,0,0.15);color:var(--muted);font-size:11.5px;font-weight:600;cursor:pointer;transition:all .15s ease;text-align:center;}
+.tab:hover{background:rgba(106,169,255,0.10);color:var(--text);}
+.tab.active{background:rgba(106,169,255,0.18);border-color:rgba(106,169,255,0.35);color:#fff;}
+
+/* ── Controls ── */
+.controls{padding:12px 14px 14px;}
+label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px;}
+input[type="text"],select{
+  width:100%;border-radius:12px;border:1px solid rgba(255,255,255,0.12);
+  background:rgba(0,0,0,0.20);color:var(--text);padding:9px 12px;outline:none;font-size:13px;
+}
+input[type="range"]{width:100%;accent-color:var(--c1);}
+button{
+  border-radius:12px;border:1px solid rgba(255,255,255,0.12);background:rgba(0,0,0,0.20);
+  color:var(--text);padding:8px 10px;outline:none;font-size:12px;cursor:pointer;
+  font-weight:650;transition:transform .08s ease,background .12s ease;width:100%;
+}
+button:hover{background:rgba(106,169,255,0.14);}
+button:active{transform:scale(.99);}
+button.primary{background:rgba(106,169,255,0.18);border-color:rgba(106,169,255,0.3);}
+button.primary:hover{background:rgba(106,169,255,0.26);}
+button.secondary{background:rgba(255,255,255,0.08);}
+button.secondary:hover{background:rgba(255,255,255,0.14);}
+button.danger{background:rgba(255,92,122,0.18);border-color:rgba(255,92,122,0.3);}
+button.danger:hover{background:rgba(255,92,122,0.26);}
+button.success{background:rgba(100,240,200,0.14);border-color:rgba(100,240,200,0.3);}
+button.success:hover{background:rgba(100,240,200,0.22);}
+button:disabled{opacity:.35;cursor:not-allowed;pointer-events:none;}
+
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-bottom:10px;}
+.row5{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:10px;}
+.mb8{margin-bottom:8px;} .mb10{margin-bottom:10px;} .mt10{margin-top:10px;}
+
+/* ── Pills / Stats ── */
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.08);}
+.pill{border-radius:14px;border:1px solid rgba(255,255,255,0.10);background:rgba(0,0,0,0.18);padding:8px 11px;font-size:12px;color:var(--muted);display:flex;justify-content:space-between;align-items:center;gap:6px;}
+.pill b{color:var(--text);font-weight:750;}
+.pill.wide{grid-column:1/-1;}
+.pill.lis-result{border-color:rgba(100,240,200,0.35);background:rgba(100,240,200,0.07);}
+.pill.lis-result b{color:var(--c2);}
+
+/* ── Status badge ── */
+.status-wrap{display:flex;align-items:center;gap:6px;padding:7px 11px;border-radius:12px;border:1px solid rgba(255,255,255,0.10);background:rgba(0,0,0,0.18);font-size:11.5px;}
+.sdot{width:8px;height:8px;border-radius:50%;background:#555;flex-shrink:0;transition:background .25s;}
+.s-idle .sdot{background:#555;}
+.s-ready .sdot{background:var(--c1);}
+.s-playing .sdot{background:var(--c2);animation:blink 1s ease-in-out infinite;}
+.s-paused .sdot{background:var(--c3);}
+.s-done .sdot{background:var(--c2);}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:.35;}}
+
+/* ── Speed display ── */
+.speed-display{text-align:center;font-size:11px;color:var(--muted);margin-top:3px;}
+
+/* ── Pseudocode ── */
+.pseudo-wrap{border-radius:12px;border:1px solid rgba(255,255,255,0.08);background:rgba(0,0,0,0.22);margin-top:8px;max-height:230px;overflow-y:auto;font-family:'Courier New',Courier,monospace;font-size:12px;}
+.pline{padding:3px 10px;display:flex;gap:8px;line-height:1.65;cursor:pointer;transition:background .12s;position:relative;}
+.pline:hover{background:rgba(255,255,255,0.04);}
+.pline.active{background:rgba(106,169,255,0.16)!important;border-left:3px solid var(--c1);}
+.pline.active .pcode{color:#fff;}
+.pnum{color:rgba(255,255,255,0.22);min-width:18px;text-align:right;font-size:10px;padding-top:2px;flex-shrink:0;}
+.pcode{color:var(--muted);}
+.kw{color:var(--c6);}
+.fn{color:var(--c1);}
+.vr{color:var(--c2);}
+/* Hover tooltip */
+.pline .ptip{
+  display:none;position:absolute;left:105%;top:0;z-index:200;
+  background:rgba(12,18,40,0.97);border:1px solid rgba(106,169,255,0.25);
+  border-radius:8px;padding:7px 11px;font-size:11px;color:var(--text);
+  max-width:240px;white-space:normal;line-height:1.5;box-shadow:0 4px 16px rgba(0,0,0,.5);
+  font-family:system-ui;pointer-events:none;
+}
+@media(max-width:980px){.pline .ptip{left:0;top:calc(100% + 4px);}}
+.pline:hover .ptip{display:block;}
+
+/* ── Module banner ── */
+.banner{padding:10px 14px;margin-bottom:12px;border-radius:12px;background:rgba(106,169,255,0.04);border:1px solid rgba(106,169,255,0.10);font-size:12px;line-height:1.65;color:var(--muted);}
+.banner b{color:var(--text);}
+
+/* ── Viz area ── */
+.viz{padding:14px;}
+.sec-title{font-size:12px;color:var(--muted);font-weight:600;margin-bottom:7px;display:flex;align-items:center;gap:7px;}
+.sec-title::after{content:'';flex:1;height:1px;background:rgba(255,255,255,0.07);}
+
+/* SVG wrappers */
+.svg-box{border-radius:12px;background:rgba(0,0,0,0.18);border:1px solid rgba(255,255,255,0.06);overflow:hidden;}
+svg{display:block;}
+
+/* ── Step explanation ── */
+.explain{border-radius:12px;border:1px solid rgba(255,255,255,0.08);background:rgba(0,0,0,0.15);padding:11px 14px;font-size:13px;line-height:1.65;color:var(--text);min-height:46px;transition:border-color .2s,background .2s;}
+.explain.ev-update{border-color:rgba(100,240,200,0.3);background:rgba(100,240,200,0.04);}
+.explain.ev-compare{border-color:rgba(255,209,102,0.2);background:rgba(255,209,102,0.02);}
+.explain.ev-done{border-color:rgba(100,240,200,0.4);background:rgba(100,240,200,0.06);}
+
+/* ── DP Table ── */
+.dp-scroll{overflow-x:auto;border-radius:12px;border:1px solid rgba(255,255,255,0.08);background:rgba(0,0,0,0.15);}
+table.dpt{width:100%;border-collapse:collapse;font-size:12px;font-family:'Courier New',monospace;}
+.dpt th,.dpt td{padding:6px 9px;text-align:center;border-bottom:1px solid rgba(255,255,255,0.05);min-width:32px;}
+.dpt th{color:var(--muted);font-weight:600;background:rgba(0,0,0,0.12);font-size:10px;}
+.dpt td.h-cur{color:var(--c4);font-weight:700;}
+.dpt td.h-cmp{color:var(--c3);font-weight:700;}
+.dpt td.h-upd{color:var(--c2);font-weight:700;background:rgba(100,240,200,0.08);}
+.dpt td.h-lis{color:var(--c2);font-weight:700;background:rgba(100,240,200,0.07);}
+.dpt td.h-skip{color:#444;}
+
+/* ── Color legend ── */
+.legend{display:flex;flex-wrap:wrap;gap:7px;margin:8px 0 4px;}
+.leg{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--muted);}
+.ldot{width:10px;height:10px;border-radius:3px;flex-shrink:0;}
+
+/* ── History table ── */
+.hist-wrap{max-height:260px;overflow-y:auto;border-radius:12px;border:1px solid rgba(255,255,255,0.08);background:rgba(0,0,0,0.15);}
+table.hist{width:100%;border-collapse:collapse;font-size:11.5px;}
+.hist th{padding:7px 10px;text-align:left;border-bottom:1px solid rgba(255,255,255,0.10);color:var(--muted);font-weight:600;position:sticky;top:0;background:rgba(10,16,38,.97);}
+.hist td{padding:6px 10px;border-bottom:1px solid rgba(255,255,255,0.04);vertical-align:top;}
+.hist tr:hover td{background:rgba(106,169,255,0.06);cursor:pointer;}
+.hist tr.hrow-active td{background:rgba(100,240,200,0.06);}
+.harr{font-family:'Courier New',monospace;font-size:10.5px;color:var(--muted);}
+
+/* ── Collapsible ── */
+.coll{border:1px solid rgba(255,255,255,0.08);border-radius:14px;background:linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.02));overflow:hidden;margin-bottom:10px;}
+.coll-hdr{padding:11px 16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;background:rgba(255,255,255,0.02);border-bottom:1px solid rgba(255,255,255,0.06);transition:background .12s;}
+.coll-hdr:hover{background:rgba(255,255,255,0.04);}
+.coll-hdr h3{margin:0;font-size:13.5px;font-weight:600;}
+.coll-btn{font-size:11px;color:var(--muted);background:rgba(255,255,255,0.06);border:none;border-radius:8px;padding:3px 9px;cursor:pointer;width:auto;transition:background .12s;}
+.coll-btn:hover{background:rgba(255,255,255,0.12);}
+.coll-body{padding:14px 16px;line-height:1.7;font-size:12.5px;overflow:hidden;max-height:2000px;transition:max-height .4s ease,padding .4s ease;}
+.coll-body.coll-closed{max-height:0!important;padding-top:0;padding-bottom:0;}
+
+/* ── Insight boxes ── */
+.ins{border-radius:12px;padding:11px 14px;margin-bottom:10px;font-size:12.5px;line-height:1.65;}
+.ins-blue{border-left:3px solid var(--c1);background:rgba(106,169,255,0.05);}
+.ins-green{border-left:3px solid var(--c2);background:rgba(100,240,200,0.05);}
+.ins-yellow{border-left:3px solid var(--c3);background:rgba(255,209,102,0.04);}
+.ins-red{border-left:3px solid var(--c5);background:rgba(255,92,122,0.04);}
+
+/* ── Tags ── */
+.tag{display:inline-block;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:600;}
+.t-blue{background:rgba(106,169,255,0.15);color:var(--c1);}
+.t-green{background:rgba(100,240,200,0.15);color:var(--c2);}
+.t-yellow{background:rgba(255,209,102,0.15);color:var(--c3);}
+.t-red{background:rgba(255,92,122,0.15);color:var(--c5);}
+
+/* ── Compare table ── */
+.ctbl{width:100%;border-collapse:collapse;font-size:12px;}
+.ctbl th{text-align:left;padding:7px 10px;border-bottom:1px solid rgba(255,255,255,0.10);color:var(--muted);font-weight:600;}
+.ctbl td{padding:7px 10px;border-bottom:1px solid rgba(255,255,255,0.05);}
+.ctbl tr:hover td{background:rgba(106,169,255,0.04);}
+
+/* ── Intro section ── */
+.intro-section{max-width:1280px;margin:0 auto 14px;padding:0 14px;}
+.intro-card{background:linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.03));border:1px solid rgba(255,255,255,0.10);border-radius:18px;box-shadow:0 10px 30px rgba(0,0,0,0.25);overflow:hidden;}
+.intro-hdr{padding:14px 18px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;background:rgba(255,255,255,0.03);border-bottom:1px solid rgba(255,255,255,0.08);}
+.intro-hdr h2{margin:0;font-size:16px;}
+.itoggle{background:rgba(106,169,255,0.14);border:1px solid rgba(106,169,255,0.25);color:var(--c1);border-radius:8px;padding:4px 11px;font-size:11px;font-weight:600;cursor:pointer;transition:background .15s;width:auto;}
+.itoggle:hover{background:rgba(106,169,255,0.22);}
+.intro-body{padding:18px 20px;overflow:hidden;max-height:3000px;transition:max-height .4s ease,padding .4s ease;}
+.intro-body.iclosed{max-height:0!important;padding-top:0;padding-bottom:0;}
+.igrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:16px;}
+@media(max-width:700px){.igrid{grid-template-columns:1fr;}}
+.igrid h3{font-size:13.5px;color:var(--c1);margin-bottom:7px;font-weight:700;}
+.igrid p{font-size:12.5px;line-height:1.7;color:var(--text);}
+.mi{display:inline-block;padding:1px 7px;background:rgba(106,169,255,0.08);border-radius:5px;font-family:'Courier New',monospace;font-size:12px;color:var(--c1);}
+
+/* CLO grid */
+.clo-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+@media(max-width:800px){.clo-grid{grid-template-columns:1fr;}}
+
+/* Complexity chart */
+.chart-box{border-radius:12px;background:rgba(0,0,0,0.22);border:1px solid rgba(255,255,255,0.06);overflow:hidden;margin-top:10px;}
+
+/* Footer */
+.footer{max-width:1280px;margin:14px auto 24px;padding:0 14px;font-size:11.5px;color:var(--muted);text-align:center;line-height:1.6;}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.12);border-radius:3px;}
+</style>
+</head>
+<body>
+
+<h1>LIS Algorithm Explorer</h1>
+<p class="subtitle">BCS 309 — Algorithms I &nbsp;|&nbsp; Longest Increasing Subsequence</p>
+
+<!-- ════════════ INTRO SECTION ════════════ -->
+<div class="intro-section">
+  <div class="intro-card">
+    <div class="intro-hdr" id="introHdr">
+      <h2>📘 Welcome — Start Here</h2>
+      <button class="itoggle" id="iToggleBtn">Collapse</button>
+    </div>
+    <div class="intro-body" id="introBody">
+      <div class="igrid">
+        <div>
+          <h3>What is LIS?</h3>
+          <p>The <b>Longest Increasing Subsequence (LIS)</b> problem asks: given a sequence of numbers, find the longest subsequence where each element is <em>strictly greater</em> than the one before it.</p>
+          <p style="margin-top:8px;">In <span class="mi">[3, 1, 4, 1, 5, 9, 2, 6]</span>, one LIS is <span class="mi">[1, 4, 5, 9]</span> with length <b>4</b>. Elements don't have to be adjacent — they just need to preserve order and be increasing.</p>
+        </div>
+        <div>
+          <h3>Why Does It Matter?</h3>
+          <p>LIS is a classic showcase for <b>Dynamic Programming</b> and the power of <b>binary search optimization</b>. It appears in real-world problems:</p>
+          <p style="margin-top:6px;">
+            • Bioinformatics: DNA/RNA alignment<br>
+            • Scheduling: box stacking problems<br>
+            • Version control: diff/patch algorithms<br>
+            • Finance: stock trading strategies
+          </p>
+        </div>
+        <div>
+          <h3>Two Approaches</h3>
+          <p><b style="color:var(--c1);">DP O(n²)</b> — For each element i, scan all j &lt; i. If A[j] &lt; A[i], try extending the LIS at j. Simple and illustrates optimal substructure perfectly.</p>
+          <p style="margin-top:8px;"><b style="color:var(--c2);">Patience Sort O(n log n)</b> — Use binary search to place each element on a pile. The number of piles equals the LIS length. Binary search cuts inner loop from O(n) to O(log n).</p>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div class="ins ins-blue">
+          <b>Subsequence vs Substring:</b> A <em>subsequence</em> deletes elements but preserves order. <span class="mi">[1,4,9]</span> is a subsequence of <span class="mi">[3,1,4,1,5,9]</span>. A <em>substring</em> must be contiguous — adjacent elements only.
+        </div>
+        <div class="ins ins-green">
+          <b>Optimal Substructure:</b> The longest IS ending at index i depends only on the longest IS ending at indices 0..i-1. We can build big solutions from stored smaller ones — the hallmark of Dynamic Programming.
+        </div>
+        <div class="ins ins-blue" style="margin-bottom:0;">
+          <b>Overlapping Subproblems:</b> dp[j] is consulted by every future dp[i] where A[j] &lt; A[i]. Without DP, we'd recompute these subproblems exponentially. Memoization turns O(2ⁿ) into O(n²).
+        </div>
+        <div class="ins ins-green" style="margin-bottom:0;">
+          <b>Binary Search Key Insight:</b> In patience sort, pile tops are always in sorted order. This invariant lets us binary-search for the correct pile in O(log n), transforming the O(n²) DP into O(n log n).
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════ MAIN TWO-COLUMN LAYOUT ════════════ -->
+<div class="wrap">
+
+  <!-- LEFT: CONTROLS PANEL -->
+  <div class="card" id="controlsCard">
+    <h2>Controls</h2>
+
+    <div class="tabBar">
+      <button class="tab active" data-algo="dp">DP — O(n²)</button>
+      <button class="tab" data-algo="patience">Patience Sort — O(n log n)</button>
+    </div>
+
+    <div class="controls">
+      <!-- Input -->
+      <label>Array Input (comma-separated, 2–14 elements)</label>
+      <input type="text" id="arrayInput" value="3, 1, 4, 1, 5, 9, 2, 6" class="mb8" placeholder="e.g. 3, 1, 4, 1, 5, 9, 2, 6"/>
+
+      <label>Quick Presets</label>
+      <div class="row3 mb10">
+        <button class="secondary" id="btnRandom">🎲 Random</button>
+        <button class="secondary" id="btnWorst">↘ Worst</button>
+        <button class="secondary" id="btnBest">↗ Best</button>
+      </div>
+
+      <!-- Playback controls -->
+      <label>Playback</label>
+      <div class="row2 mb8">
+        <button class="success" id="btnBuild">⚙ Build Steps</button>
+        <button class="secondary" id="btnStep" disabled>▶| Step</button>
+      </div>
+      <div class="row3 mb10">
+        <button class="primary" id="btnPlay" disabled>▶ Play</button>
+        <button class="secondary" id="btnPause" disabled>⏸ Pause</button>
+        <button class="danger" id="btnReset" disabled>↺ Reset</button>
+      </div>
+
+      <!-- Speed -->
+      <label>Animation Speed</label>
+      <input type="range" id="speedSlider" min="1" max="8" value="4"/>
+      <div class="speed-display" id="speedLabel">Speed: 1x</div>
+
+      <!-- Step counter + status -->
+      <div style="display:grid;grid-template-columns:1fr auto;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.08);">
+        <div class="pill"><span>Step</span><b id="stepCounter">0 / 0</b></div>
+        <div class="status-wrap s-idle" id="statusWrap">
+          <div class="sdot" id="sDot"></div>
+          <span id="statusText" style="font-size:11.5px;color:var(--muted);">Idle</span>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="stat-grid">
+        <div class="pill"><span>Comparisons</span><b id="statCmp">0</b></div>
+        <div class="pill"><span id="stat2Lbl">DP Updates</span><b id="statUpd">0</b></div>
+        <div class="pill"><span>Binary Searches</span><b id="statBS">0</b></div>
+        <div class="pill"><span>Total Steps</span><b id="statTot">0</b></div>
+        <div class="pill wide lis-result" id="resultPill" style="display:none;">
+          <span>✨ LIS Length</span><b id="statLIS">—</b>
+        </div>
+      </div>
+
+      <!-- Pseudocode -->
+      <div style="margin-top:10px;">
+        <label>Pseudocode <span style="font-size:10px;opacity:.4;">(hover for explanation)</span></label>
+        <div class="pseudo-wrap" id="pseudoWrap"></div>
+      </div>
+    </div>
+  </div><!-- end left panel -->
+
+  <!-- RIGHT: VISUALIZATION PANEL -->
+  <div class="card">
+    <h2 id="vizTitle">Visualization — DP O(n²)</h2>
+    <div class="viz">
+
+      <!-- Banner -->
+      <div class="banner" id="algoBanner">
+        The <b>DP approach</b> fills a table <b>dp[i]</b> = length of longest increasing subsequence <em>ending at index i</em>. For each pair (j, i) where j &lt; i and A[j] &lt; A[i], we extend: dp[i] = max(dp[i], dp[j]+1). Watch comparisons and table updates unfold step by step.
+      </div>
+
+      <!-- Array bars -->
+      <div class="viz-section" style="margin-bottom:14px;">
+        <div class="sec-title">Array Visualization</div>
+        <div class="svg-box">
+          <svg id="arraySVG" width="100%" style="height:175px;" viewBox="0 0 600 175" preserveAspectRatio="xMidYMid meet"></svg>
+        </div>
+        <div class="legend" id="colorLegend">
+          <div class="leg"><div class="ldot" style="background:var(--c1);"></div>Normal</div>
+          <div class="leg"><div class="ldot" style="background:var(--c4);"></div>Active (i)</div>
+          <div class="leg"><div class="ldot" style="background:var(--c3);"></div>Comparing (j)</div>
+          <div class="leg"><div class="ldot" style="background:var(--c2);"></div>LIS / Updated</div>
+          <div class="leg"><div class="ldot" style="background:#555;"></div>Skipped</div>
+        </div>
+      </div>
+
+      <!-- DP Table (shown for DP algo) -->
+      <div id="dpSection" style="margin-bottom:14px;">
+        <div class="sec-title">DP Table</div>
+        <div class="dp-scroll">
+          <table class="dpt" id="dpTable"></table>
+        </div>
+      </div>
+
+      <!-- Patience Piles (shown for patience algo) -->
+      <div id="patSection" style="display:none;margin-bottom:14px;">
+        <div class="sec-title">Patience Piles
+          <span style="font-size:10px;color:rgba(183,192,255,0.5);font-weight:400;margin-left:6px;">(pile tops always sorted — enables binary search!)</span>
+        </div>
+        <div class="svg-box">
+          <svg id="pilesSVG" width="100%" style="height:210px;" viewBox="0 0 600 210" preserveAspectRatio="xMidYMid meet"></svg>
+        </div>
+        <div class="legend" id="patLegend">
+          <div class="leg"><div class="ldot" style="background:var(--c4);"></div>Current element</div>
+          <div class="leg"><div class="ldot" style="background:var(--c6);"></div>Search range</div>
+          <div class="leg"><div class="ldot" style="background:var(--c3);"></div>Mid pile</div>
+          <div class="leg"><div class="ldot" style="background:var(--c2);"></div>Placed here</div>
+        </div>
+      </div>
+
+      <!-- Step explanation -->
+      <div style="margin-bottom:14px;">
+        <div class="sec-title">Step Explanation</div>
+        <div class="explain" id="stepExplain">
+          Click <b>Build Steps</b> to generate algorithm steps, then use <b>▶ Play</b> or <b>▶| Step</b> to animate.
+        </div>
+      </div>
+
+      <!-- History table -->
+      <div>
+        <div class="coll" id="histColl">
+          <div class="coll-hdr" onclick="toggleColl(this)">
+            <h3>📋 Step History <span id="histCount" style="font-weight:400;color:var(--muted);font-size:12px;"></span></h3>
+            <button class="coll-btn">Collapse</button>
+          </div>
+          <div class="coll-body">
+            <div class="hist-wrap">
+              <table class="hist">
+                <thead><tr><th style="width:36px;">#</th><th>Action</th><th style="width:140px;">State (dp / piles)</th></tr></thead>
+                <tbody id="histBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div><!-- end right panel -->
+</div><!-- end wrap -->
+
+<!-- ════════════ FULL-WIDTH CLO ANALYSIS ════════════ -->
+<div class="full-wrap">
+  <div class="card">
+    <h2>📊 CLO Analysis — Complexity, Searching &amp; Design Paradigm</h2>
+    <div style="padding:14px;">
+      <div class="clo-grid">
+
+        <!-- CLO-1: Complexity -->
+        <div class="coll">
+          <div class="coll-hdr" onclick="toggleColl(this)">
+            <h3 style="color:var(--c1);">CLO-1: Time &amp; Space Complexity</h3>
+            <button class="coll-btn">Expand</button>
+          </div>
+          <div class="coll-body coll-closed">
+            <table class="ctbl" style="margin-bottom:12px;">
+              <thead><tr><th>Algorithm</th><th>Time</th><th>Space</th><th>Notes</th></tr></thead>
+              <tbody>
+                <tr><td><b>DP</b></td><td><span class="tag t-yellow">O(n²)</span></td><td><span class="tag t-blue">O(n)</span></td><td style="color:var(--muted);font-size:11px;">n×n comparisons</td></tr>
+                <tr><td><b>Patience</b></td><td><span class="tag t-green">O(n log n)</span></td><td><span class="tag t-blue">O(n)</span></td><td style="color:var(--muted);font-size:11px;">n elements × log n search</td></tr>
+              </tbody>
+            </table>
+            <div class="ins ins-yellow">
+              <b>Why does binary search save us?</b> The DP inner loop scans O(n) elements. Patience sort replaces this with O(log n) binary search on the pile tops — which are always sorted. Total: n × log n.
+            </div>
+            <label style="margin-top:10px;">Adjust n to see growth: <b id="chartNLbl">20</b></label>
+            <input type="range" id="chartN" min="5" max="80" value="20" oninput="updChart(this.value)" style="margin-top:4px;"/>
+            <div class="chart-box">
+              <svg id="cplxChart" width="100%" style="height:180px;" viewBox="0 0 400 180"></svg>
+            </div>
+            <div style="margin-top:8px;display:flex;gap:12px;justify-content:center;font-size:11px;">
+              <span style="color:var(--c5);">— O(n²) DP</span>
+              <span style="color:var(--c2);">— O(n log n) Patience</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- CLO-2: Binary Search -->
+        <div class="coll">
+          <div class="coll-hdr" onclick="toggleColl(this)">
+            <h3 style="color:var(--c2);">CLO-2: Role of Binary Search</h3>
+            <button class="coll-btn">Expand</button>
+          </div>
+          <div class="coll-body coll-closed">
+            <div class="ins ins-green">
+              <b>Key invariant:</b> Pile tops are always in strictly increasing order. This is maintained because we only replace a pile top with a <em>smaller or equal</em> value, and new piles are always larger than all existing tops.
+            </div>
+            <p style="font-size:12.5px;line-height:1.7;margin:8px 0;">Since pile tops are sorted, we can use <b>binary search</b> to find the leftmost pile whose top ≥ current element. We search for the position where <span class="mi">piles[mid] ≥ val</span>.</p>
+            <table class="ctbl">
+              <thead><tr><th>Operation</th><th>Naive Scan</th><th>With Binary Search</th></tr></thead>
+              <tbody>
+                <tr><td>Find correct pile</td><td style="color:var(--c5);">O(n) linear</td><td style="color:var(--c2);">O(log n)</td></tr>
+                <tr><td>Per element total</td><td style="color:var(--c5);">O(n)</td><td style="color:var(--c2);">O(log n)</td></tr>
+                <tr><td><b>Overall</b></td><td style="color:var(--c5);">O(n²)</td><td style="color:var(--c2);font-weight:700;">O(n log n)</td></tr>
+              </tbody>
+            </table>
+            <div class="ins ins-blue" style="margin-top:10px;margin-bottom:0;">
+              In the <b>Patience Sort</b> tab, watch the purple dashed rectangle narrow as binary search zeroes in on the correct pile. The yellow triangle marks the current mid-point.
+            </div>
+          </div>
+        </div>
+
+        <!-- CLO-3: Dynamic Programming -->
+        <div class="coll">
+          <div class="coll-hdr" onclick="toggleColl(this)">
+            <h3 style="color:var(--c3);">CLO-3: Dynamic Programming</h3>
+            <button class="coll-btn">Expand</button>
+          </div>
+          <div class="coll-body coll-closed">
+            <div class="ins ins-yellow">
+              <b>DP formulation:</b><br>
+              State: <span class="mi">dp[i]</span> = length of LIS ending at index i<br>
+              Transition: <span class="mi">dp[i] = max(dp[j]+1)</span> ∀ j&lt;i, A[j]&lt;A[i]<br>
+              Base case: <span class="mi">dp[i] = 1</span><br>
+              Answer: <span class="mi">max(dp[0..n-1])</span>
+            </div>
+            <div class="ins ins-blue" style="margin-bottom:10px;">
+              <b>Optimal Substructure:</b> The LIS ending at i can be extended from the LIS ending at any j where A[j] &lt; A[i]. The optimal choice at i depends on the optimal choices for all j &lt; i.
+            </div>
+            <div class="ins ins-green" style="margin-bottom:0;">
+              <b>Overlapping Subproblems:</b> dp[j] is used by every future dp[i] (where A[j] &lt; A[i]). Without memoization, recomputing these overlapping subproblems leads to exponential time — storing dp[] makes it O(n²).
+            </div>
+          </div>
+        </div>
+
+      </div><!-- end clo-grid -->
+    </div>
+  </div>
+</div>
+
+<!-- ════════════ FOOTER ════════════ -->
+<div class="footer">
+  <b>LIS connects to:</b> Longest Common Subsequence (LCS), Edit Distance, Box Stacking, Chain of Pairs, and Patience Sorting.<br>
+  Part of <b>BCS 309 — Algorithms I</b> &nbsp;|&nbsp; Canadian University Dubai
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+     JAVASCRIPT
+     ════════════════════════════════════════════════════════ -->
+<script>
+'use strict';
+
+/* ── Global State ─────────────────────────────────────────── */
+const S = {
+  algo: 'dp',
+  arr: [3, 1, 4, 1, 5, 9, 2, 6],
+  steps: [],
+  cur: 0,
+  playing: false,
+  timer: null,
+  speed: 1.0,
+  status: 'idle',
+  histRows: 0
+};
+
+/* Speed map: slider value 1-8 → multiplier */
+const SPMAP = [0.25, 0.5, 0.75, 1, 1.5, 2, 3, 4];
+const $ = id => document.getElementById(id);
+
+/* ── Pseudocode Data ──────────────────────────────────────── */
+const PSEUDO = {
+  dp: [
+    { c: 'function LIS_DP(A[0..n-1]):', t: 'Main function — takes the input array A of length n' },
+    { c: '  dp[i] = 1  for all i', t: 'Base case: every element alone is a subsequence of length 1' },
+    { c: '  for i = 0 to n-1:', t: 'Outer loop — compute the LIS length ending at each index i' },
+    { c: '    for j = 0 to i-1:', t: 'Inner loop — check all previous elements j < i as possible predecessors' },
+    { c: '      if A[j] < A[i]:', t: 'Can A[j] precede A[i]? Only if strictly less (for strictly increasing)' },
+    { c: '        dp[i] = max(dp[i], dp[j]+1)', t: 'Extend the LIS ending at j by one more element (A[i])' },
+    { c: '  return max(dp)', t: 'The final LIS length is the maximum value anywhere in dp[]' },
+  ],
+  patience: [
+    { c: 'function LIS_PATIENCE(A[0..n-1]):', t: 'Patience sort approach — counts LIS using pile tops' },
+    { c: '  piles ← []', t: 'piles[k] = current top card of pile k. Pile tops are always sorted ↑' },
+    { c: '  for i = 0 to n-1:', t: 'Process each element A[i] one at a time' },
+    { c: '    lo←0,  hi←|piles|', t: 'Binary search bounds: search entire piles array' },
+    { c: '    while lo < hi:', t: 'Standard binary search loop — runs O(log |piles|) times' },
+    { c: '      mid ← ⌊(lo + hi) / 2⌋', t: 'Middle index of current search range' },
+    { c: '      if piles[mid] < A[i]:', t: 'Pile top is smaller — A[i] can go further right' },
+    { c: '        lo ← mid + 1', t: 'Move left boundary right (mid is too small)' },
+    { c: '      else:', t: 'Pile top ≥ A[i] — this pile might work, try going left for a smaller index' },
+    { c: '        hi ← mid', t: 'Move right boundary to mid (mid itself could be the answer)' },
+    { c: '    if lo == |piles|:', t: 'lo reached the end: A[i] is larger than ALL pile tops' },
+    { c: '      piles.append(A[i])', t: 'Create a new pile! This means the LIS is now longer by 1' },
+    { c: '    else:', t: 'lo points to the leftmost pile whose top ≥ A[i]' },
+    { c: '      piles[lo] ← A[i]', t: 'Replace pile top with A[i] — smaller value, more future options' },
+    { c: '  return |piles|', t: 'Number of piles = LIS length (patience sorting theorem)' },
+  ]
+};
+
+/* ── Step Generation: DP O(n²) ───────────────────────────── */
+function genDP(arr) {
+  const n = arr.length;
+  const dp = new Array(n).fill(1);
+  const prev = new Array(n).fill(-1);
+  const steps = [];
+  let cmp = 0, upd = 0;
+
+  const snap = (type, hl, pl, desc, extras = {}) => {
+    steps.push({ type, highlights: hl, pseudoLine: pl, desc,
+      dp: dp.slice(), prev: prev.slice(),
+      stats: { cmp, upd, bs: 0, tot: steps.length + 1 }, ...extras });
+  };
+
+  snap('start', {}, 0, 'Starting LIS Dynamic Programming. We will compute dp[i] = length of longest increasing subsequence ending at each index i.');
+
+  snap('init', {}, 1, `Initialize dp[0..${n-1}] = 1. Each element alone forms a valid increasing subsequence of length 1.`);
+
+  for (let i = 0; i < n; i++) {
+    snap('outer', { [i]: 'cur' }, 2, `Outer loop: i = ${i}. Computing dp[${i}] — LIS ending at A[${i}] = ${arr[i]}.`);
+
+    for (let j = 0; j < i; j++) {
+      cmp++;
+      snap('compare', { [i]: 'cur', [j]: 'cmp' }, 4, `Compare A[${j}] = ${arr[j]} and A[${i}] = ${arr[i]}. Is ${arr[j]} < ${arr[i]}?`, { i, j });
+
+      if (arr[j] < arr[i]) {
+        if (dp[j] + 1 > dp[i]) {
+          upd++;
+          dp[i] = dp[j] + 1;
+          prev[i] = j;
+          snap('update', { [i]: 'upd', [j]: 'cmp' }, 5, `✓ A[${j}]=${arr[j]} < A[${i}]=${arr[i]}  →  dp[${i}] = dp[${j}]+1 = ${dp[i]}. Extended LIS through index ${j}!`, { i, j });
+        } else {
+          snap('noimprove', { [i]: 'cur', [j]: 'cmp' }, 5, `A[${j}]=${arr[j]} < A[${i}]=${arr[i]}, but dp[${j}]+1=${dp[j]+1} ≤ dp[${i}]=${dp[i]}. No improvement needed.`, { i, j });
+        }
+      } else {
+        snap('skip', { [i]: 'cur', [j]: 'skip' }, 4, `✗ A[${j}]=${arr[j]} ≥ A[${i}]=${arr[i]}. Not strictly increasing — cannot extend. Skip.`, { i, j });
+      }
+    }
+  }
+
+  // Reconstruct LIS path
+  const maxLen = Math.max(...dp);
+  let end = 0;
+  for (let i = 0; i < n; i++) if (dp[i] > dp[end]) end = i;
+  const path = [];
+  for (let c = end; c !== -1; c = prev[c]) path.unshift(c);
+  const hl = {};
+  path.forEach(idx => { hl[idx] = 'lis'; });
+
+  snap('done', hl, 6, `✅ Done! LIS length = ${maxLen}. Sequence: [${path.map(i => arr[i]).join(', ')}] at indices [${path.join(', ')}].`,
+    { lisLen: maxLen, lisPath: path });
+
+  return steps;
+}
+
+/* ── Step Generation: Patience Sort O(n log n) ───────────── */
+function genPatience(arr) {
+  const n = arr.length;
+  const tops = [];        // pile tops
+  const full = [];        // full stacks per pile
+  const steps = [];
+  let bs = 0, cmp = 0;
+
+  const snap = (type, hl, pl, desc, extras = {}) => {
+    steps.push({ type, highlights: hl, pseudoLine: pl, desc,
+      tops: tops.slice(), full: full.map(p => p.slice()),
+      stats: { cmp, upd: 0, bs, tot: steps.length + 1 }, ...extras });
+  };
+
+  snap('start', {}, 0, 'Starting Patience Sort. We maintain piles whose tops are always increasing. Number of piles = LIS length.',
+    { i: -1, val: null, lo: -1, hi: -1, mid: -1, pileIdx: -1 });
+
+  for (let i = 0; i < n; i++) {
+    const val = arr[i];
+    snap('pick', { [i]: 'cur' }, 2,
+      `Processing A[${i}] = ${val}. There are ${tops.length} pile(s). Binary searching for correct pile...`,
+      { i, val, lo: 0, hi: tops.length, mid: -1, pileIdx: -1 });
+
+    let lo = 0, hi = tops.length;
+
+    while (lo < hi) {
+      cmp++; bs++;
+      const mid = Math.floor((lo + hi) / 2);
+      snap('bsearch', { [i]: 'search' }, 5,
+        `Binary search: lo=${lo}, hi=${hi}, mid=${mid} → piles[${mid}] = ${tops[mid]}.`,
+        { i, val, lo, hi, mid, pileIdx: -1 });
+
+      if (tops[mid] < val) {
+        lo = mid + 1;
+        snap('bsr', { [i]: 'search' }, 7,
+          `piles[${mid}] = ${tops[mid]} < ${val}: go right. New lo = ${lo}.`,
+          { i, val, lo, hi, mid, pileIdx: -1 });
+      } else {
+        hi = mid;
+        snap('bsl', { [i]: 'search' }, 9,
+          `piles[${mid}] = ${tops[mid]} ≥ ${val}: go left. New hi = ${hi}.`,
+          { i, val, lo, hi, mid, pileIdx: -1 });
+      }
+    }
+
+    if (lo === tops.length) {
+      tops.push(val);
+      full.push([val]);
+      snap('newpile', { [i]: 'placed' }, 11,
+        `lo = ${lo} = |piles|: no suitable pile found. New pile created with ${val}. LIS length ≥ ${tops.length}!`,
+        { i, val, lo, hi: lo, mid: -1, pileIdx: lo - 1 });
+    } else {
+      const old = tops[lo];
+      full[lo].push(val);
+      tops[lo] = val;
+      snap('place', { [i]: 'placed' }, 13,
+        `Place ${val} on pile ${lo} (replacing top ${old}). Pile tops: [${tops.join(', ')}]. LIS length unchanged.`,
+        { i, val, lo, hi: lo + 1, mid: -1, pileIdx: lo });
+    }
+  }
+
+  snap('done', {}, 14,
+    `✅ Done! LIS length = ${tops.length} (= number of piles). Final pile tops: [${tops.join(', ')}].`,
+    { i: -1, val: null, lo: -1, hi: -1, mid: -1, pileIdx: -1, lisLen: tops.length });
+
+  return steps;
+}
+
+/* ── Render: Array Bars ───────────────────────────────────── */
+function drawBars(step) {
+  const arr = S.arr;
+  const svg = $('arraySVG');
+  const n = arr.length;
+  if (!n) { svg.innerHTML = ''; return; }
+
+  const W = 600, H = 175, BOT = 28, TOP = 18, SIDE = 14;
+  const avail = W - 2 * SIDE;
+  const bw = Math.min(54, Math.floor(avail / n) - 4);
+  const gap = (avail - n * bw) / (n + 1);
+  const sx0 = SIDE + gap;
+  const maxH = H - TOP - BOT;
+  const maxV = Math.max(...arr, 1);
+
+  const HL = { cur:'#ff9f43', cmp:'#ffd166', upd:'#64f0c8', lis:'#64f0c8', skip:'#555', search:'#c77dff', placed:'#64f0c8', normal:'#6aa9ff' };
+  const hl = (step && step.highlights) || {};
+
+  let html = '';
+  for (let k = 0; k < n; k++) {
+    const x = sx0 + k * (bw + gap);
+    const bh = Math.max(4, Math.round((arr[k] / maxV) * maxH));
+    const by = H - BOT - bh;
+    const state = hl[k] || 'normal';
+    const col = HL[state] || HL.normal;
+    const op = state === 'skip' ? 0.3 : 1;
+
+    html += `<rect x="${x}" y="${by}" width="${bw}" height="${bh}" rx="4" fill="${col}28" stroke="${col}" stroke-width="1.5" opacity="${op}" style="transition:y .18s,height .18s,fill .12s,stroke .12s;"/>`;
+
+    const fs = bw < 30 ? 9 : 11;
+    html += `<text x="${x + bw/2}" y="${Math.max(by - 3, TOP - 2)}" text-anchor="middle" fill="${col}" font-size="${fs}" font-weight="600" opacity="${op}">${arr[k]}</text>`;
+    html += `<text x="${x + bw/2}" y="${H - 10}" text-anchor="middle" fill="rgba(183,192,255,.55)" font-size="9">${k}</text>`;
+
+    // Pointer labels
+    const ptrs = [];
+    if (step) {
+      if (step.i === k) ptrs.push({ lbl: 'i', c: '#ff9f43' });
+      if (step.j === k) ptrs.push({ lbl: 'j', c: '#ffd166' });
+    }
+    if (ptrs.length) {
+      html += `<text x="${x + bw/2}" y="${H - 1}" text-anchor="middle" fill="${ptrs[0].c}" font-size="8" font-weight="700">${ptrs.map(p => p.lbl).join('/')}</text>`;
+    }
+  }
+
+  svg.innerHTML = html;
+}
+
+/* ── Render: DP Table ─────────────────────────────────────── */
+function drawDP(step) {
+  const arr = S.arr;
+  const n = arr.length;
+  const dp = (step && step.dp) || new Array(n).fill(0);
+  const hl = (step && step.highlights) || {};
+
+  const cls = k => {
+    const s = hl[k] || 'normal';
+    if (s === 'cur') return 'h-cur';
+    if (s === 'cmp') return 'h-cmp';
+    if (s === 'upd') return 'h-upd';
+    if (s === 'lis') return 'h-lis';
+    if (s === 'skip') return 'h-skip';
+    return '';
+  };
+
+  let h = '<tr><th>idx</th>';
+  for (let k = 0; k < n; k++) h += `<td class="${cls(k)}">${k}</td>`;
+  h += '</tr><tr><th>A[i]</th>';
+  for (let k = 0; k < n; k++) h += `<td>${arr[k]}</td>`;
+  h += '</tr><tr><th>dp[i]</th>';
+  for (let k = 0; k < n; k++) h += `<td class="${cls(k)}">${dp[k] > 0 ? dp[k] : '–'}</td>`;
+  h += '</tr>';
+  $('dpTable').innerHTML = h;
+}
+
+/* ── Render: Patience Piles ───────────────────────────────── */
+function drawPiles(step) {
+  const svg = $('pilesSVG');
+  if (!step) { svg.innerHTML = '<text x="300" y="105" text-anchor="middle" fill="rgba(183,192,255,.4)" font-size="12">Build steps to see piles</text>'; return; }
+
+  const pilesFull = step.full || [];
+  const np = pilesFull.length;
+  const W = 600, H = 210, BASE = 172;
+  const CW = 48, CH = 22, CGAP = 2, PGAP = 16;
+
+  if (np === 0) {
+    svg.innerHTML = '<text x="300" y="105" text-anchor="middle" fill="rgba(183,192,255,.4)" font-size="12">No piles yet — processing first element...</text>';
+    return;
+  }
+
+  const totalPileW = np * CW + (np - 1) * PGAP;
+  const p0 = (W - totalPileW) / 2;
+
+  const isBs = ['bsearch','bsr','bsl'].includes(step.type);
+  const bsLo = step.lo !== undefined ? step.lo : -1;
+  const bsHi = step.hi !== undefined ? step.hi : -1; // exclusive
+  const bsMid = step.mid !== undefined ? step.mid : -1;
+  const placed = step.pileIdx !== undefined ? step.pileIdx : -1;
+
+  let html = '';
+
+  // Binary search range bracket
+  if (isBs && bsLo >= 0 && bsHi > bsLo && bsHi <= np) {
+    const rx1 = p0 + bsLo * (CW + PGAP) - 6;
+    const rx2 = p0 + (bsHi - 1) * (CW + PGAP) + CW + 6;
+    html += `<rect x="${rx1}" y="10" width="${rx2 - rx1}" height="${H - 44}" rx="8" fill="none" stroke="rgba(199,125,255,.35)" stroke-width="1.5" stroke-dasharray="5 3"/>`;
+    html += `<text x="${(rx1 + rx2)/2}" y="22" text-anchor="middle" fill="rgba(199,125,255,.75)" font-size="9.5" font-weight="600">search [${bsLo}..${bsHi-1}]</text>`;
+  }
+
+  // Draw each pile
+  for (let p = 0; p < np; p++) {
+    const pile = pilesFull[p];
+    const px = p0 + p * (CW + PGAP);
+
+    // Determine card color for top of pile
+    let topCol = 'var(--c1)';
+    if ((step.type === 'newpile' || step.type === 'place') && p === placed) topCol = 'var(--c2)';
+    else if (isBs && p === bsMid) topCol = 'var(--c3)';
+    else if (isBs && p >= bsLo && p < bsHi) topCol = 'var(--c6)';
+
+    // Draw cards bottom-to-top
+    for (let c = 0; c < pile.length; c++) {
+      const isTop = c === pile.length - 1;
+      const cy = BASE - (c + 1) * (CH + CGAP);
+      const cardCol = isTop ? topCol : 'rgba(106,169,255,.4)';
+      const fillA = isTop ? '30' : '12';
+      html += `<rect x="${px}" y="${cy}" width="${CW}" height="${CH}" rx="5" fill="${cardCol}${fillA}" stroke="${cardCol}" stroke-width="${isTop ? 1.5 : 1}" style="transition:fill .15s,stroke .15s;"/>`;
+      html += `<text x="${px + CW/2}" y="${cy + 15}" text-anchor="middle" fill="${isTop ? cardCol : 'rgba(183,192,255,.45)'}" font-size="${isTop ? 12 : 10}" font-weight="${isTop ? '700' : '400'}">${pile[c]}</text>`;
+    }
+
+    // Mid marker
+    if (isBs && p === bsMid) {
+      const topY = BASE - pile.length * (CH + CGAP) - 10;
+      html += `<text x="${px + CW/2}" y="${topY}" text-anchor="middle" fill="var(--c3)" font-size="9" font-weight="700">▼mid</text>`;
+    }
+
+    // Pile label
+    html += `<text x="${px + CW/2}" y="${BASE + 14}" text-anchor="middle" fill="${topCol}" font-size="10" font-weight="600">P${p}</text>`;
+  }
+
+  // Current element being processed
+  if (step.i !== undefined && step.i >= 0 && step.val != null) {
+    const eCol = (step.type === 'newpile' || step.type === 'place') ? 'var(--c2)' : 'var(--c6)';
+    html += `<rect x="8" y="6" width="${CW + 16}" height="22" rx="6" fill="${eCol}18" stroke="${eCol}" stroke-width="1.2"/>`;
+    html += `<text x="${8 + (CW+16)/2}" y="21" text-anchor="middle" fill="${eCol}" font-size="11" font-weight="700">A[${step.i}]=${step.val}</text>`;
+  }
+
+  svg.innerHTML = html;
+}
+
+/* ── Render: Pseudocode ───────────────────────────────────── */
+function drawPseudo(activeLine) {
+  const lines = PSEUDO[S.algo];
+  let html = '';
+  for (let i = 0; i < lines.length; i++) {
+    const act = i === activeLine;
+    const code = lines[i].c
+      .replace(/\b(function|for|if|else|while|return|to)\b/g, '<span class="kw">$1</span>')
+      .replace(/\b(LIS_DP|LIS_PATIENCE)\b/g, '<span class="fn">$1</span>')
+      .replace(/\b(dp|piles|lo|hi|mid|A)\b/g, '<span class="vr">$1</span>');
+    html += `<div class="pline${act ? ' active' : ''}" id="pl${i}">
+      <span class="pnum">${i+1}</span>
+      <span class="pcode">${code}</span>
+      <span class="ptip">${lines[i].t}</span>
+    </div>`;
+  }
+  $('pseudoWrap').innerHTML = html;
+  if (activeLine >= 0) {
+    const el = $('pl' + activeLine);
+    if (el) el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }
+}
+
+/* ── Apply Step ───────────────────────────────────────────── */
+function applyStep(idx) {
+  if (idx < 0 || idx >= S.steps.length) return;
+  S.cur = idx;
+  const step = S.steps[idx];
+
+  drawBars(step);
+  if (S.algo === 'dp') drawDP(step);
+  else drawPiles(step);
+  drawPseudo(step.pseudoLine >= 0 ? step.pseudoLine : -1);
+
+  // Explanation
+  const ex = $('stepExplain');
+  ex.textContent = step.desc || '';
+  ex.className = 'explain';
+  if (step.type === 'update' || step.type === 'newpile') ex.classList.add('ev-update');
+  else if (step.type === 'compare' || step.type === 'bsearch') ex.classList.add('ev-compare');
+  else if (step.type === 'done') ex.classList.add('ev-done');
+
+  // Stats
+  const st = step.stats || {};
+  $('statCmp').textContent = st.cmp || 0;
+  $('statUpd').textContent = S.algo === 'dp' ? (st.upd || 0) : (step.tops ? step.tops.length : 0);
+  $('statBS').textContent = st.bs || 0;
+  $('statTot').textContent = st.tot || 0;
+  $('stepCounter').textContent = `${idx + 1} / ${S.steps.length}`;
+
+  if (step.type === 'done') {
+    $('resultPill').style.display = 'flex';
+    $('statLIS').textContent = step.lisLen || (step.tops ? step.tops.length : '?');
+    setStatus('done');
+  }
+
+  // History — add key steps
+  const isKey = ['update','newpile','place','done','outer'].includes(step.type);
+  if (isKey || idx === 0) addHistory(step, idx);
+}
+
+/* ── History ─────────────────────────────────────────────── */
+function addHistory(step, idx) {
+  const tbody = $('histBody');
+  // Deactivate all
+  tbody.querySelectorAll('tr').forEach(r => r.classList.remove('hrow-active'));
+  // Limit to 30
+  if (tbody.children.length >= 30) tbody.removeChild(tbody.firstChild);
+
+  const stateStr = S.algo === 'dp'
+    ? '[' + (step.dp || []).join(',') + ']'
+    : '[' + (step.tops || []).join(',') + ']';
+
+  const tr = document.createElement('tr');
+  tr.className = 'hrow-active';
+  tr.dataset.step = idx;
+  const desc = (step.desc || '').substring(0, 60) + ((step.desc || '').length > 60 ? '…' : '');
+  tr.innerHTML = `<td style="color:var(--muted);">${idx+1}</td><td title="${step.desc}">${desc}</td><td class="harr">${stateStr}</td>`;
+  tr.addEventListener('click', () => {
+    stopAnim();
+    applyStep(parseInt(tr.dataset.step));
+    setStatus('paused');
+  });
+  tbody.appendChild(tr);
+  tr.scrollIntoView({ block: 'nearest' });
+
+  S.histRows++;
+  $('histCount').textContent = `(${tbody.children.length} rows)`;
+}
+
+/* ── Status ───────────────────────────────────────────────── */
+const STATUS_LABELS = { idle:'Idle', ready:'Ready', playing:'Playing', paused:'Paused', done:'Done' };
+function setStatus(s) {
+  S.status = s;
+  const w = $('statusWrap');
+  w.className = 'status-wrap s-' + s;
+  $('statusText').textContent = STATUS_LABELS[s] || s;
+  $('btnPlay').disabled  = s === 'idle' || s === 'done' || s === 'playing';
+  $('btnPause').disabled = s !== 'playing';
+  $('btnStep').disabled  = s === 'idle' || s === 'done';
+  $('btnReset').disabled = s === 'idle';
+}
+
+/* ── Animation ────────────────────────────────────────────── */
+function getDelay() {
+  const mult = SPMAP[parseInt($('speedSlider').value) - 1] || 1;
+  return Math.max(60, Math.round(700 / mult));
+}
+function stopAnim() {
+  S.playing = false;
+  if (S.timer) { clearInterval(S.timer); S.timer = null; }
+}
+function playAnim() {
+  if (S.playing) return;
+  if (S.cur >= S.steps.length - 1) return;
+  S.playing = true;
+  setStatus('playing');
+  S.timer = setInterval(() => {
+    if (S.cur < S.steps.length - 1) {
+      applyStep(S.cur + 1);
+    } else {
+      stopAnim();
+      setStatus('done');
+    }
+  }, getDelay());
+}
+
+/* ── Build Steps ──────────────────────────────────────────── */
+function buildSteps() {
+  stopAnim();
+  const raw = $('arrayInput').value;
+  const arr = raw.split(',').map(v => parseInt(v.trim())).filter(v => !isNaN(v));
+  if (arr.length < 2 || arr.length > 14) {
+    alert('Please enter between 2 and 14 numbers.');
+    return;
+  }
+  S.arr = arr;
+  S.steps = S.algo === 'dp' ? genDP(arr) : genPatience(arr);
+  S.cur = 0;
+  S.histRows = 0;
+  $('histBody').innerHTML = '';
+  $('resultPill').style.display = 'none';
+  $('histCount').textContent = '';
+  applyStep(0);
+  setStatus('ready');
+}
+
+/* ── Reset ────────────────────────────────────────────────── */
+function resetAll() {
+  stopAnim();
+  S.steps = [];
+  S.cur = 0;
+  drawBars({ highlights: {} });
+  if (S.algo === 'dp') drawDP({ dp: new Array(S.arr.length).fill(0), highlights: {} });
+  else drawPiles(null);
+  drawPseudo(-1);
+  $('stepExplain').textContent = 'Click Build Steps to generate steps, then Play or Step to animate.';
+  $('stepExplain').className = 'explain';
+  $('stepCounter').textContent = '0 / 0';
+  $('statCmp').textContent = $('statUpd').textContent = $('statBS').textContent = $('statTot').textContent = '0';
+  $('histBody').innerHTML = '';
+  $('resultPill').style.display = 'none';
+  setStatus('idle');
+}
+
+/* ── Event Listeners ─────────────────────────────────────── */
+$('btnBuild').addEventListener('click', buildSteps);
+$('btnPlay').addEventListener('click', () => { if (!S.steps.length) buildSteps(); else playAnim(); });
+$('btnPause').addEventListener('click', () => { stopAnim(); setStatus('paused'); });
+$('btnStep').addEventListener('click', () => {
+  stopAnim();
+  if (!S.steps.length) { buildSteps(); return; }
+  if (S.cur < S.steps.length - 1) {
+    applyStep(S.cur + 1);
+    if (S.cur === S.steps.length - 1) setStatus('done');
+    else setStatus('paused');
+  }
+});
+$('btnReset').addEventListener('click', resetAll);
+
+$('btnRandom').addEventListener('click', () => {
+  const n = 6 + Math.floor(Math.random() * 5);
+  const a = Array.from({length: n}, () => 1 + Math.floor(Math.random() * 14));
+  $('arrayInput').value = a.join(', ');
+});
+$('btnWorst').addEventListener('click', () => { $('arrayInput').value = '9, 8, 7, 6, 5, 4, 3, 2, 1'; });
+$('btnBest').addEventListener('click', () => { $('arrayInput').value = '1, 3, 5, 7, 9, 11, 13'; });
+
+$('speedSlider').addEventListener('input', e => {
+  const mult = SPMAP[parseInt(e.target.value) - 1];
+  $('speedLabel').textContent = `Speed: ${mult}x`;
+  if (S.playing) { stopAnim(); playAnim(); }
+});
+
+/* ── Algorithm Tab Switch ────────────────────────────────── */
+document.querySelectorAll('.tab[data-algo]').forEach(tab => {
+  tab.addEventListener('click', () => {
+    const algo = tab.dataset.algo;
+    if (algo === S.algo) return;
+    S.algo = algo;
+    document.querySelectorAll('.tab[data-algo]').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+
+    $('vizTitle').textContent = algo === 'dp' ? 'Visualization — DP O(n²)' : 'Visualization — Patience Sort O(n log n)';
+    $('algoBanner').innerHTML = algo === 'dp'
+      ? 'The <b>DP approach</b> fills a table <b>dp[i]</b> = length of LIS ending at index i. For each pair (j, i) where j &lt; i and A[j] &lt; A[i], we extend: dp[i] = max(dp[i], dp[j]+1). Watch comparisons and table updates unfold step by step.'
+      : 'The <b>Patience Sort</b> uses <b>binary search</b> to place each element on the correct pile in O(log n). Pile tops are always sorted — enabling the binary search. The number of piles at the end equals the LIS length!';
+
+    if (algo === 'dp') {
+      $('dpSection').style.display = 'block';
+      $('patSection').style.display = 'none';
+      $('stat2Lbl').textContent = 'DP Updates';
+      $('colorLegend').innerHTML = `
+        <div class="leg"><div class="ldot" style="background:var(--c1);"></div>Normal</div>
+        <div class="leg"><div class="ldot" style="background:var(--c4);"></div>Active (i)</div>
+        <div class="leg"><div class="ldot" style="background:var(--c3);"></div>Comparing (j)</div>
+        <div class="leg"><div class="ldot" style="background:var(--c2);"></div>LIS / Updated</div>
+        <div class="leg"><div class="ldot" style="background:#555;"></div>Skipped</div>`;
+    } else {
+      $('dpSection').style.display = 'none';
+      $('patSection').style.display = 'block';
+      $('stat2Lbl').textContent = 'Pile Count';
+      $('colorLegend').innerHTML = `
+        <div class="leg"><div class="ldot" style="background:var(--c4);"></div>Current elem</div>
+        <div class="leg"><div class="ldot" style="background:var(--c6);"></div>Search range</div>
+        <div class="leg"><div class="ldot" style="background:var(--c3);"></div>Mid pile</div>
+        <div class="leg"><div class="ldot" style="background:var(--c2);"></div>Placed here</div>`;
+    }
+    resetAll();
+  });
+});
+
+/* ── Intro toggle ────────────────────────────────────────── */
+$('introHdr').addEventListener('click', () => {
+  $('introBody').classList.toggle('iclosed');
+  $('iToggleBtn').textContent = $('introBody').classList.contains('iclosed') ? 'Expand' : 'Collapse';
+});
+
+/* ── Collapsible helper ──────────────────────────────────── */
+function toggleColl(hdr) {
+  const body = hdr.nextElementSibling;
+  const btn = hdr.querySelector('.coll-btn');
+  body.classList.toggle('coll-closed');
+  btn.textContent = body.classList.contains('coll-closed') ? 'Expand' : 'Collapse';
+}
+
+/* ── Complexity Chart ─────────────────────────────────────── */
+function drawChart(maxN) {
+  const svg = $('cplxChart');
+  if (!svg) return;
+  const W = 400, H = 180, PAD = { l:46, r:16, t:18, b:34 };
+  const PW = W - PAD.l - PAD.r, PH = H - PAD.t - PAD.b;
+  maxN = maxN || 20;
+
+  const ns = [];
+  for (let i = 1; i <= maxN; i++) ns.push(i);
+  const n2vals = ns.map(n => n * n);
+  const nlnvals = ns.map(n => Math.max(n * Math.log2(n), 1));
+  const yMax = n2vals[n2vals.length - 1];
+
+  const sx = n => PAD.l + ((n - 1) / (maxN - 1)) * PW;
+  const sy = v => PAD.t + PH - (Math.min(v, yMax) / yMax) * PH;
+
+  let h = '';
+  // Grid
+  for (let i = 0; i <= 4; i++) {
+    const y = PAD.t + (PH / 4) * i;
+    const v = Math.round(yMax * (1 - i / 4));
+    h += `<line x1="${PAD.l}" y1="${y}" x2="${W - PAD.r}" y2="${y}" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>`;
+    h += `<text x="${PAD.l - 4}" y="${y + 4}" text-anchor="end" fill="rgba(183,192,255,.35)" font-size="8">${v > 999 ? (v/1000).toFixed(1)+'k' : v}</text>`;
+  }
+  for (let n = Math.ceil(maxN / 5) * 1; n <= maxN; n += Math.ceil(maxN / 5)) {
+    h += `<text x="${sx(n)}" y="${H - PAD.b + 13}" text-anchor="middle" fill="rgba(183,192,255,.35)" font-size="8">n=${n}</text>`;
+  }
+
+  // n² curve
+  const pts2 = ns.map(n => `${sx(n).toFixed(1)},${sy(n2vals[n-1]).toFixed(1)}`).join(' ');
+  h += `<polyline points="${pts2}" fill="none" stroke="var(--c5)" stroke-width="2" opacity=".85"/>`;
+
+  // n log n curve
+  const ptsL = ns.map(n => `${sx(n).toFixed(1)},${sy(nlnvals[n-1]).toFixed(1)}`).join(' ');
+  h += `<polyline points="${ptsL}" fill="none" stroke="var(--c2)" stroke-width="2" opacity=".85"/>`;
+
+  // Labels at end of curves
+  const n2last = sy(n2vals[maxN-1]);
+  const nlnlast = sy(nlnvals[maxN-1]);
+  if (n2last > 12) h += `<text x="${sx(maxN) + 2}" y="${n2last + 4}" fill="var(--c5)" font-size="9" font-weight="600">O(n²)</text>`;
+  if (nlnlast > 12) h += `<text x="${sx(maxN) + 2}" y="${nlnlast + 4}" fill="var(--c2)" font-size="9" font-weight="600">O(n log n)</text>`;
+
+  svg.innerHTML = h;
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+}
+
+function updChart(n) {
+  $('chartNLbl').textContent = n;
+  drawChart(parseInt(n));
+}
+
+/* ── Initialization ──────────────────────────────────────── */
+drawPseudo(-1);
+drawBars({ highlights: {} });
+drawDP({ dp: new Array(S.arr.length).fill(0), highlights: {} });
+drawPiles(null);
+setStatus('idle');
+drawChart(20);
+
+</script>
+</body>
+</html>
