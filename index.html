@@ -5,1281 +5,1650 @@
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>LIS Algorithm Explorer — BCS 309</title>
 <style>
-/* ═══════════════════════════════════════════
-   DESIGN TOKENS (matching instructor style)
-   ═══════════════════════════════════════════ */
-:root{
-  --bg:#0b1020;
-  --text:#e8ecff;
-  --muted:#b7c0ff;
-  --c1:#6aa9ff;
-  --c2:#64f0c8;
-  --c3:#ffd166;
-  --c4:#ff9f43;
-  --c5:#ff5c7a;
-  --c6:#c77dff;
-  --c7:#ff6b6b;
-  --stroke:rgba(255,255,255,0.12);
+/* ═══════════════════════════════════════
+   DESIGN TOKENS
+   ═══════════════════════════════════════ */
+:root {
+  --bg:      #0b1020;
+  --surface: rgba(255,255,255,0.04);
+  --border:  rgba(255,255,255,0.09);
+  --text:    #e8ecff;
+  --muted:   #8893c4;
+  --dim:     rgba(255,255,255,0.25);
+  /* accent palette */
+  --blue:    #6aa9ff;
+  --teal:    #64f0c8;
+  --yellow:  #ffd166;
+  --orange:  #ff9f43;
+  --red:     #ff5c7a;
+  --purple:  #c77dff;
+  --green:   #64f0c8;
 }
-*{box-sizing:border-box;margin:0;padding:0;}
-body{
-  font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
-  background:radial-gradient(1200px 800px at 20% 0%,#14204a 0%,var(--bg) 45%,#070a14 100%);
-  color:var(--text);min-height:100vh;
+
+/* ── Reset ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background: radial-gradient(1400px 900px at 15% 0%, #131d45 0%, var(--bg) 50%, #060910 100%);
+  color: var(--text);
+  min-height: 100vh;
+  font-size: 13px;
+  line-height: 1.5;
 }
-h1{text-align:center;font-size:22px;font-weight:700;margin:18px 0 4px;letter-spacing:-.3px;}
-.subtitle{text-align:center;font-size:12px;color:var(--muted);margin:0 0 14px;}
+
+/* ── Page header ── */
+.page-hdr {
+  text-align: center;
+  padding: 20px 0 12px;
+}
+.page-hdr h1 {
+  font-size: 21px;
+  font-weight: 700;
+  letter-spacing: -.3px;
+}
+.page-hdr p {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 3px;
+}
 
 /* ── Layout ── */
-.wrap{max-width:1280px;margin:0 auto;padding:0 14px 18px;display:grid;grid-template-columns:420px 1fr;gap:14px;}
-@media(max-width:980px){.wrap{grid-template-columns:1fr;}}
-.full-wrap{max-width:1280px;margin:0 auto;padding:0 14px 14px;}
-
-/* ── Cards ── */
-.card{
-  background:linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.03));
-  border:1px solid rgba(255,255,255,0.10);border-radius:18px;
-  box-shadow:0 10px 30px rgba(0,0,0,0.25);overflow:hidden;
+.app-wrap {
+  max-width: 1300px;
+  margin: 0 auto;
+  padding: 0 14px 24px;
+  display: grid;
+  grid-template-columns: 400px 1fr;
+  gap: 14px;
 }
-.card h2{margin:0;padding:14px 14px 10px;font-size:16px;background:rgba(255,255,255,0.03);border-bottom:1px solid rgba(255,255,255,0.08);}
+@media (max-width: 960px) {
+  .app-wrap { grid-template-columns: 1fr; }
+}
+.section-wrap {
+  max-width: 1300px;
+  margin: 0 auto;
+  padding: 0 14px 14px;
+}
+
+/* ── Card ── */
+.card {
+  background: linear-gradient(170deg, rgba(255,255,255,0.055), rgba(255,255,255,0.025));
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+}
+.card-hdr {
+  padding: 12px 16px;
+  font-size: 14px;
+  font-weight: 700;
+  background: rgba(0,0,0,0.12);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.card-hdr .badge {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 20px;
+  margin-left: auto;
+}
+.badge-blue   { background: rgba(106,169,255,.18); color: var(--blue); }
+.badge-teal   { background: rgba(100,240,200,.18); color: var(--teal); }
+
+/* ── Controls panel ── */
+.ctrl-body { padding: 12px 14px 16px; }
+
+/* ── Form elements ── */
+label {
+  display: block;
+  font-size: 11.5px;
+  color: var(--muted);
+  margin-bottom: 5px;
+  font-weight: 500;
+}
+input[type="text"] {
+  width: 100%;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: rgba(0,0,0,0.22);
+  color: var(--text);
+  padding: 8px 11px;
+  outline: none;
+  font-size: 13px;
+  transition: border-color .15s;
+}
+input[type="text"]:focus { border-color: rgba(106,169,255,.45); }
+input[type="text"].err   { border-color: rgba(255,92,122,.5); }
+input[type="range"] {
+  width: 100%;
+  accent-color: var(--blue);
+  cursor: pointer;
+}
+.input-err {
+  font-size: 11px;
+  color: var(--red);
+  margin-top: 4px;
+  min-height: 16px;
+  display: none;
+}
+.input-err.show { display: block; }
+
+/* ── Buttons ── */
+button {
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,0.06);
+  color: var(--text);
+  padding: 7px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+  transition: background .12s, border-color .12s, opacity .12s, transform .06s;
+}
+button:hover:not(:disabled)    { background: rgba(255,255,255,0.11); }
+button:active:not(:disabled)   { transform: scale(.98); }
+button:disabled                { opacity: .3; cursor: not-allowed; }
+
+.btn-primary  { background: rgba(106,169,255,.18); border-color: rgba(106,169,255,.3); color: var(--blue); }
+.btn-primary:hover:not(:disabled) { background: rgba(106,169,255,.26); }
+
+.btn-success  { background: rgba(100,240,200,.16); border-color: rgba(100,240,200,.3); color: var(--teal); }
+.btn-success:hover:not(:disabled) { background: rgba(100,240,200,.24); }
+
+.btn-danger   { background: rgba(255,92,122,.16); border-color: rgba(255,92,122,.28); color: var(--red); }
+.btn-danger:hover:not(:disabled)  { background: rgba(255,92,122,.24); }
+
+.btn-reset-glow {
+  box-shadow: 0 0 0 2px rgba(255,92,122,.35);
+  animation: resetPulse 1.5s ease-in-out infinite;
+}
+@keyframes resetPulse {
+  0%,100% { box-shadow: 0 0 0 2px rgba(255,92,122,.35); }
+  50%      { box-shadow: 0 0 0 4px rgba(255,92,122,.15); }
+}
+
+/* Grid helpers */
+.g2  { display: grid; grid-template-columns: 1fr 1fr;             gap: 7px; }
+.g3  { display: grid; grid-template-columns: 1fr 1fr 1fr;         gap: 7px; }
+.g5  { display: grid; grid-template-columns: repeat(5,1fr);       gap: 6px; }
+.mb6 { margin-bottom: 6px; }
+.mb10{ margin-bottom: 10px; }
+.mt8 { margin-top: 8px; }
+.mt12{ margin-top: 12px; }
+.sep { border-top: 1px solid var(--border); margin: 10px 0; }
 
 /* ── Tabs ── */
-.tabBar{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:10px 14px 0;}
-.tab{padding:8px 6px;border-radius:10px;border:1px solid rgba(255,255,255,0.08);background:rgba(0,0,0,0.15);color:var(--muted);font-size:11.5px;font-weight:600;cursor:pointer;transition:all .15s ease;text-align:center;}
-.tab:hover{background:rgba(106,169,255,0.10);color:var(--text);}
-.tab.active{background:rgba(106,169,255,0.18);border-color:rgba(106,169,255,0.35);color:#fff;}
-
-/* ── Controls ── */
-.controls{padding:12px 14px 14px;}
-label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px;}
-input[type="text"],select{
-  width:100%;border-radius:12px;border:1px solid rgba(255,255,255,0.12);
-  background:rgba(0,0,0,0.20);color:var(--text);padding:9px 12px;outline:none;font-size:13px;
+.tab-bar {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5px;
+  padding: 10px 14px 0;
 }
-input[type="range"]{width:100%;accent-color:var(--c1);}
-button{
-  border-radius:12px;border:1px solid rgba(255,255,255,0.12);background:rgba(0,0,0,0.20);
-  color:var(--text);padding:8px 10px;outline:none;font-size:12px;cursor:pointer;
-  font-weight:650;transition:transform .08s ease,background .12s ease;width:100%;
+.tab {
+  padding: 7px 6px;
+  border-radius: 9px;
+  border: 1px solid var(--border);
+  background: rgba(0,0,0,0.15);
+  color: var(--muted);
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+  transition: all .13s;
 }
-button:hover{background:rgba(106,169,255,0.14);}
-button:active{transform:scale(.99);}
-button.primary{background:rgba(106,169,255,0.18);border-color:rgba(106,169,255,0.3);}
-button.primary:hover{background:rgba(106,169,255,0.26);}
-button.secondary{background:rgba(255,255,255,0.08);}
-button.secondary:hover{background:rgba(255,255,255,0.14);}
-button.danger{background:rgba(255,92,122,0.18);border-color:rgba(255,92,122,0.3);}
-button.danger:hover{background:rgba(255,92,122,0.26);}
-button.success{background:rgba(100,240,200,0.14);border-color:rgba(100,240,200,0.3);}
-button.success:hover{background:rgba(100,240,200,0.22);}
-button:disabled{opacity:.35;cursor:not-allowed;pointer-events:none;}
+.tab:hover   { background: rgba(106,169,255,.09); color: var(--text); }
+.tab.active  { background: rgba(106,169,255,.17); border-color: rgba(106,169,255,.35); color: #fff; }
 
-.row2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
-.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-bottom:10px;}
-.row5{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:10px;}
-.mb8{margin-bottom:8px;} .mb10{margin-bottom:10px;} .mt10{margin-top:10px;}
+/* ── Pills / stat row ── */
+.stat-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px;
+  margin-top: 10px;
+}
+.pill {
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: rgba(0,0,0,0.18);
+  padding: 7px 11px;
+  font-size: 11.5px;
+  color: var(--muted);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px;
+}
+.pill b   { color: var(--text); font-weight: 700; }
+.pill.wide{ grid-column: 1/-1; }
+.pill.result {
+  grid-column: 1/-1;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  border-color: rgba(100,240,200,.35);
+  background: rgba(100,240,200,.05);
+  display: none;
+}
+.pill.result .result-label { font-size: 11px; color: var(--teal); font-weight: 600; }
+.pill.result .result-val   { font-size: 13px; font-weight: 700; color: var(--text); }
+.pill.result .result-seq   { font-size: 12px; color: var(--teal); font-family: 'Courier New', monospace; }
 
-/* ── Pills / Stats ── */
-.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.08);}
-.pill{border-radius:14px;border:1px solid rgba(255,255,255,0.10);background:rgba(0,0,0,0.18);padding:8px 11px;font-size:12px;color:var(--muted);display:flex;justify-content:space-between;align-items:center;gap:6px;}
-.pill b{color:var(--text);font-weight:750;}
-.pill.wide{grid-column:1/-1;}
-.pill.lis-result{border-color:rgba(100,240,200,0.35);background:rgba(100,240,200,0.07);}
-.pill.lis-result b{color:var(--c2);}
+/* ── Status indicator ── */
+.status-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+.status-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  transition: background .25s;
+}
+.status-text { font-size: 11.5px; color: var(--muted); }
+/* states */
+.s-idle    .status-dot { background: #444; }
+.s-ready   .status-dot { background: var(--blue); }
+.s-playing .status-dot { background: var(--teal); animation: blink 1s ease infinite; }
+.s-paused  .status-dot { background: var(--yellow); }
+.s-done    .status-dot { background: var(--teal); }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
 
-/* ── Status badge ── */
-.status-wrap{display:flex;align-items:center;gap:6px;padding:7px 11px;border-radius:12px;border:1px solid rgba(255,255,255,0.10);background:rgba(0,0,0,0.18);font-size:11.5px;}
-.sdot{width:8px;height:8px;border-radius:50%;background:#555;flex-shrink:0;transition:background .25s;}
-.s-idle .sdot{background:#555;}
-.s-ready .sdot{background:var(--c1);}
-.s-playing .sdot{background:var(--c2);animation:blink 1s ease-in-out infinite;}
-.s-paused .sdot{background:var(--c3);}
-.s-done .sdot{background:var(--c2);}
-@keyframes blink{0%,100%{opacity:1;}50%{opacity:.35;}}
-
-/* ── Speed display ── */
-.speed-display{text-align:center;font-size:11px;color:var(--muted);margin-top:3px;}
+/* ── Speed label ── */
+.speed-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 5px;
+}
+.speed-badge {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--blue);
+  background: rgba(106,169,255,.12);
+  border: 1px solid rgba(106,169,255,.2);
+  border-radius: 6px;
+  padding: 1px 7px;
+}
 
 /* ── Pseudocode ── */
-.pseudo-wrap{border-radius:12px 12px 0 0;border:1px solid rgba(255,255,255,0.08);border-bottom:none;background:rgba(0,0,0,0.22);margin-top:8px;max-height:200px;overflow-y:auto;font-family:'Courier New',Courier,monospace;font-size:12px;}
-.pline{padding:4px 10px;display:flex;gap:8px;line-height:1.65;cursor:default;transition:background .1s;user-select:none;}
-.pline:hover{background:rgba(255,255,255,0.05);}
-.pline.active{background:rgba(106,169,255,0.18)!important;border-left:3px solid var(--c1);}
-.pline.active .pcode{color:#fff;}
-.pline.hovered{background:rgba(255,255,255,0.06);}
-.pnum{color:rgba(255,255,255,0.22);min-width:18px;text-align:right;font-size:10px;padding-top:2px;flex-shrink:0;}
-.pcode{color:var(--muted);}
-.kw{color:var(--c6);}
-.fn{color:var(--c1);}
-.vr{color:var(--c2);}
-/* Fixed explanation bar below pseudocode — no floating tooltip */
-.pseudo-tip-bar{
-  border-radius:0 0 12px 12px;border:1px solid rgba(255,255,255,0.08);border-top:1px solid rgba(106,169,255,0.12);
-  background:rgba(106,169,255,0.04);padding:7px 12px;font-size:11.5px;color:var(--muted);
-  min-height:34px;line-height:1.55;transition:color .12s,background .12s;font-family:system-ui;
+.pseudo-outer { margin-top: 10px; }
+.pseudo-scroll {
+  border: 1px solid var(--border);
+  border-bottom: none;
+  border-radius: 10px 10px 0 0;
+  background: rgba(0,0,0,0.25);
+  max-height: 190px;
+  overflow-y: auto;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 11.5px;
 }
-.pseudo-tip-bar.lit{color:var(--text);background:rgba(106,169,255,0.07);}
-
-/* ── Viz section header with expand button ── */
-.viz-sec-hdr{display:flex;align-items:center;margin-bottom:8px;gap:8px;}
-.viz-sec-hdr .sec-title{margin-bottom:0;flex:1;}
-.viz-sec-hdr .sec-title::after{content:'';flex:1;height:1px;background:rgba(255,255,255,0.07);}
-.expand-btn{
-  flex-shrink:0;padding:3px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.10);
-  background:rgba(255,255,255,0.06);color:var(--muted);font-size:10.5px;cursor:pointer;
-  transition:background .12s,color .12s;white-space:nowrap;width:auto;font-weight:600;
+.pline {
+  display: flex;
+  gap: 9px;
+  padding: 3px 10px;
+  line-height: 1.7;
+  transition: background .1s;
+  cursor: default;
+  user-select: none;
 }
-.expand-btn:hover{background:rgba(106,169,255,0.14);color:var(--text);}
-
-/* ── Full-screen modal ── */
-.modal-overlay{
-  display:none;position:fixed;inset:0;z-index:1000;
-  background:rgba(5,8,20,0.92);backdrop-filter:blur(6px);
-  padding:24px;overflow-y:auto;
+.pline:hover     { background: rgba(255,255,255,.04); }
+.pline.hl        { background: rgba(106,169,255,.16); border-left: 3px solid var(--blue); }
+.pline.hl .pcode { color: #fff; }
+.pnum  { color: rgba(255,255,255,.2); min-width: 16px; text-align: right; font-size: 10px; padding-top: 2px; flex-shrink: 0; }
+.pcode { color: var(--muted); }
+.kw  { color: var(--purple); }
+.fn  { color: var(--blue); }
+.vr  { color: var(--teal); }
+.pseudo-tip {
+  border: 1px solid var(--border);
+  border-top: 1px solid rgba(106,169,255,.15);
+  border-radius: 0 0 10px 10px;
+  background: rgba(106,169,255,.04);
+  padding: 7px 12px;
+  font-size: 11.5px;
+  color: var(--muted);
+  min-height: 33px;
+  line-height: 1.5;
+  transition: color .12s;
 }
-.modal-overlay.open{display:flex;flex-direction:column;gap:14px;}
-.modal-header{display:flex;align-items:center;gap:12px;}
-.modal-header h3{margin:0;font-size:17px;font-weight:700;flex:1;}
-.modal-close{
-  padding:6px 16px;border-radius:10px;border:1px solid rgba(255,92,122,0.3);
-  background:rgba(255,92,122,0.14);color:var(--c5);font-size:12px;font-weight:600;
-  cursor:pointer;transition:background .12s;width:auto;
+.pseudo-tip.lit { color: var(--text); }
+
+/* ═══════════════════════════════════════
+   VISUALIZATION PANEL
+   ═══════════════════════════════════════ */
+.viz-body { padding: 14px; }
+
+.viz-hdr {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
 }
-.modal-close:hover{background:rgba(255,92,122,0.24);}
-.modal-content{flex:1;}
-.banner{padding:10px 14px;margin-bottom:12px;border-radius:12px;background:rgba(106,169,255,0.04);border:1px solid rgba(106,169,255,0.10);font-size:12px;line-height:1.65;color:var(--muted);}
-.banner b{color:var(--text);}
+.viz-label {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--muted);
+  flex: 1;
+}
+.viz-label::after {
+  /* no decorative line — keep it clean */
+}
+.expand-btn {
+  padding: 3px 9px;
+  border-radius: 7px;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,.05);
+  color: var(--muted);
+  font-size: 10.5px;
+  font-weight: 600;
+  cursor: pointer;
+  width: auto;
+  transition: background .12s;
+}
+.expand-btn:hover { background: rgba(106,169,255,.12); color: var(--text); }
 
-/* ── Viz area ── */
-.viz{padding:14px;}
-.sec-title{font-size:12px;color:var(--muted);font-weight:600;margin-bottom:7px;display:flex;align-items:center;gap:7px;}
-.sec-title::after{content:'';flex:1;height:1px;background:rgba(255,255,255,0.07);}
+/* SVG container */
+.svg-wrap {
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: rgba(0,0,0,0.18);
+  overflow: hidden;
+  display: block;
+}
+svg { display: block; width: 100%; }
 
-/* SVG wrappers */
-.svg-box{border-radius:12px;background:rgba(0,0,0,0.18);border:1px solid rgba(255,255,255,0.06);overflow:hidden;}
-svg{display:block;}
-
-/* ── Step explanation ── */
-.explain{border-radius:12px;border:1px solid rgba(255,255,255,0.08);background:rgba(0,0,0,0.15);padding:11px 14px;font-size:13px;line-height:1.65;color:var(--text);min-height:46px;transition:border-color .2s,background .2s;}
-.explain.ev-update{border-color:rgba(100,240,200,0.3);background:rgba(100,240,200,0.04);}
-.explain.ev-compare{border-color:rgba(255,209,102,0.2);background:rgba(255,209,102,0.02);}
-.explain.ev-done{border-color:rgba(100,240,200,0.4);background:rgba(100,240,200,0.06);}
+/* ── Banner ── */
+.algo-banner {
+  border-radius: 10px;
+  border: 1px solid rgba(106,169,255,.12);
+  background: rgba(106,169,255,.04);
+  padding: 9px 13px;
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.65;
+  margin-bottom: 12px;
+}
+.algo-banner b { color: var(--text); }
 
 /* ── DP Table ── */
-.dp-scroll{overflow-x:auto;border-radius:12px;border:1px solid rgba(255,255,255,0.08);background:rgba(0,0,0,0.15);}
-table.dpt{width:100%;border-collapse:collapse;font-size:12px;font-family:'Courier New',monospace;}
-.dpt th,.dpt td{padding:7px 9px;text-align:center;border-bottom:1px solid rgba(255,255,255,0.05);min-width:34px;}
-.dpt th{color:var(--muted);font-weight:600;background:rgba(0,0,0,0.18);font-size:10px;letter-spacing:.3px;}
-.dpt tr:last-child td,.dpt tr:last-child th{border-bottom:none;}
-.dpt td.h-cur{color:var(--c4);font-weight:700;background:rgba(255,159,67,0.07);}
-.dpt td.h-cmp{color:var(--c3);font-weight:700;background:rgba(255,209,102,0.07);}
-.dpt td.h-upd{color:var(--c2);font-weight:700;background:rgba(100,240,200,0.10);}
-.dpt td.h-lis{color:var(--c2);font-weight:700;background:rgba(100,240,200,0.09);}
-.dpt td.h-skip{color:#3a3f5c;}
-.dpt td.h-prev{color:var(--c6);font-size:10px;}
+.dp-scroll {
+  overflow-x: auto;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: rgba(0,0,0,0.16);
+}
+table.dp-tbl {
+  border-collapse: collapse;
+  font-size: 12px;
+  font-family: 'Courier New', monospace;
+  white-space: nowrap;
+  width: 100%;
+}
+.dp-tbl th, .dp-tbl td {
+  padding: 6px 10px;
+  text-align: center;
+  border-right: 1px solid rgba(255,255,255,.04);
+  min-width: 38px;
+}
+.dp-tbl th {
+  background: rgba(0,0,0,.18);
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 600;
+  text-align: left;
+  padding-left: 12px;
+  border-bottom: 1px solid var(--border);
+  letter-spacing: .2px;
+}
+.dp-tbl tr:last-child td { border-bottom: none; }
+.dp-tbl td { border-bottom: 1px solid rgba(255,255,255,.03); }
+.dc-i    { color: var(--orange); font-weight: 700; background: rgba(255,159,67,.07); }
+.dc-j    { color: var(--yellow); font-weight: 700; background: rgba(255,209,102,.07); }
+.dc-upd  { color: var(--teal);   font-weight: 700; background: rgba(100,240,200,.09); }
+.dc-lis  { color: var(--teal);   font-weight: 700; background: rgba(100,240,200,.09); }
+.dc-skip { color: rgba(255,255,255,.18); }
+.dc-prev { font-size: 10px; color: var(--purple); }
+
+/* ── Step Explanation ── */
+.step-explain {
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: rgba(0,0,0,.14);
+  padding: 10px 13px;
+  font-size: 12.5px;
+  line-height: 1.65;
+  color: var(--text);
+  min-height: 44px;
+  transition: border-color .2s, background .2s;
+  margin-bottom: 12px;
+}
+.step-explain.ev-update  { border-color: rgba(100,240,200,.3); background: rgba(100,240,200,.04); }
+.step-explain.ev-compare { border-color: rgba(255,209,102,.2); }
+.step-explain.ev-done    { border-color: rgba(100,240,200,.4); background: rgba(100,240,200,.05); }
+.step-explain.ev-bs      { border-color: rgba(199,125,255,.2); }
+
+/* ── Final Result Banner ── */
+#finalResult {
+  display: none;
+  border-radius: 12px;
+  border: 1px solid rgba(100,240,200,.4);
+  background: linear-gradient(135deg, rgba(100,240,200,.08), rgba(106,169,255,.06));
+  padding: 16px 18px;
+  margin-bottom: 12px;
+  text-align: center;
+}
+#finalResult .fr-title { font-size: 12px; color: var(--teal); font-weight: 600; margin-bottom: 6px; letter-spacing: .5px; text-transform: uppercase; }
+#finalResult .fr-length { font-size: 28px; font-weight: 800; color: var(--teal); line-height: 1; margin-bottom: 6px; }
+#finalResult .fr-seq-label { font-size: 11px; color: var(--muted); margin-bottom: 4px; }
+#finalResult .fr-seq { font-size: 16px; font-weight: 700; color: var(--text); font-family: 'Courier New', monospace; }
+#finalResult .fr-indices { font-size: 11px; color: var(--muted); margin-top: 3px; font-family: 'Courier New', monospace; }
 
 /* ── Color legend ── */
-.legend{display:flex;flex-wrap:wrap;gap:7px;margin:8px 0 4px;}
-.leg{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--muted);}
-.ldot{width:10px;height:10px;border-radius:3px;flex-shrink:0;}
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 7px;
+  margin-bottom: 4px;
+}
+.leg { display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--muted); }
+.ldot { width: 9px; height: 9px; border-radius: 3px; flex-shrink: 0; }
 
 /* ── History table ── */
-.hist-wrap{max-height:260px;overflow-y:auto;border-radius:12px;border:1px solid rgba(255,255,255,0.08);background:rgba(0,0,0,0.15);}
-table.hist{width:100%;border-collapse:collapse;font-size:11.5px;}
-.hist th{padding:7px 10px;text-align:left;border-bottom:1px solid rgba(255,255,255,0.10);color:var(--muted);font-weight:600;position:sticky;top:0;background:rgba(10,16,38,.97);}
-.hist td{padding:6px 10px;border-bottom:1px solid rgba(255,255,255,0.04);vertical-align:top;}
-.hist tr:hover td{background:rgba(106,169,255,0.06);cursor:pointer;}
-.hist tr.hrow-active td{background:rgba(100,240,200,0.06);}
-.harr{font-family:'Courier New',monospace;font-size:10.5px;color:var(--muted);}
-
-/* ── Collapsible ── */
-.coll{border:1px solid rgba(255,255,255,0.08);border-radius:14px;background:linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.02));overflow:hidden;margin-bottom:10px;}
-.coll-hdr{padding:11px 16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;background:rgba(255,255,255,0.02);border-bottom:1px solid rgba(255,255,255,0.06);transition:background .12s;}
-.coll-hdr:hover{background:rgba(255,255,255,0.04);}
-.coll-hdr h3{margin:0;font-size:13.5px;font-weight:600;}
-.coll-btn{font-size:11px;color:var(--muted);background:rgba(255,255,255,0.06);border:none;border-radius:8px;padding:3px 9px;cursor:pointer;width:auto;transition:background .12s;}
-.coll-btn:hover{background:rgba(255,255,255,0.12);}
-.coll-body{padding:14px 16px;line-height:1.7;font-size:12.5px;overflow:hidden;max-height:2000px;transition:max-height .4s ease,padding .4s ease;}
-.coll-body.coll-closed{max-height:0!important;padding-top:0;padding-bottom:0;}
-
-/* ── Insight boxes ── */
-.ins{border-radius:12px;padding:11px 14px;margin-bottom:10px;font-size:12.5px;line-height:1.65;}
-.ins-blue{border-left:3px solid var(--c1);background:rgba(106,169,255,0.05);}
-.ins-green{border-left:3px solid var(--c2);background:rgba(100,240,200,0.05);}
-.ins-yellow{border-left:3px solid var(--c3);background:rgba(255,209,102,0.04);}
-.ins-red{border-left:3px solid var(--c5);background:rgba(255,92,122,0.04);}
-
-/* ── Tags ── */
-.tag{display:inline-block;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:600;}
-.t-blue{background:rgba(106,169,255,0.15);color:var(--c1);}
-.t-green{background:rgba(100,240,200,0.15);color:var(--c2);}
-.t-yellow{background:rgba(255,209,102,0.15);color:var(--c3);}
-.t-red{background:rgba(255,92,122,0.15);color:var(--c5);}
-
-/* ── Compare table ── */
-.ctbl{width:100%;border-collapse:collapse;font-size:12px;}
-.ctbl th{text-align:left;padding:7px 10px;border-bottom:1px solid rgba(255,255,255,0.10);color:var(--muted);font-weight:600;}
-.ctbl td{padding:7px 10px;border-bottom:1px solid rgba(255,255,255,0.05);}
-.ctbl tr:hover td{background:rgba(106,169,255,0.04);}
+.hist-coll { border-radius: 12px; border: 1px solid var(--border); overflow: hidden; }
+.hist-coll-hdr {
+  padding: 10px 14px;
+  background: rgba(0,0,0,.12);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  gap: 8px;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+.hist-coll-hdr:hover { background: rgba(255,255,255,.03); }
+.hist-toggle { margin-left: auto; font-size: 10.5px; color: var(--muted); background: rgba(255,255,255,.06); border: 1px solid var(--border); border-radius: 6px; padding: 2px 8px; cursor: pointer; width: auto; }
+.hist-body {
+  max-height: 220px;
+  overflow-y: auto;
+  display: none;
+}
+.hist-body.open { display: block; }
+table.hist-tbl { width: 100%; border-collapse: collapse; font-size: 11.5px; }
+.hist-tbl th { padding: 6px 10px; text-align: left; color: var(--muted); font-size: 10px; font-weight: 600; background: rgba(0,0,0,.15); border-bottom: 1px solid var(--border); position: sticky; top: 0; }
+.hist-tbl td { padding: 5px 9px; border-bottom: 1px solid rgba(255,255,255,.03); vertical-align: middle; }
+.hist-tbl tr:hover td { background: rgba(106,169,255,.06); cursor: pointer; }
+.hist-tbl tr.h-cur td { background: rgba(100,240,200,.06); }
+.hist-icon { font-size: 12px; }
+.hist-arr  { font-family: 'Courier New', monospace; font-size: 10px; color: var(--muted); }
 
 /* ── Intro section ── */
-.intro-section{max-width:1280px;margin:0 auto 14px;padding:0 14px;}
-.intro-card{background:linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.03));border:1px solid rgba(255,255,255,0.10);border-radius:18px;box-shadow:0 10px 30px rgba(0,0,0,0.25);overflow:hidden;}
-.intro-hdr{padding:14px 18px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;background:rgba(255,255,255,0.03);border-bottom:1px solid rgba(255,255,255,0.08);}
-.intro-hdr h2{margin:0;font-size:16px;}
-.itoggle{background:rgba(106,169,255,0.14);border:1px solid rgba(106,169,255,0.25);color:var(--c1);border-radius:8px;padding:4px 11px;font-size:11px;font-weight:600;cursor:pointer;transition:background .15s;width:auto;}
-.itoggle:hover{background:rgba(106,169,255,0.22);}
-.intro-body{padding:18px 20px;overflow:hidden;max-height:3000px;transition:max-height .4s ease,padding .4s ease;}
-.intro-body.iclosed{max-height:0!important;padding-top:0;padding-bottom:0;}
-.igrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:16px;}
-@media(max-width:700px){.igrid{grid-template-columns:1fr;}}
-.igrid h3{font-size:13.5px;color:var(--c1);margin-bottom:7px;font-weight:700;}
-.igrid p{font-size:12.5px;line-height:1.7;color:var(--text);}
-.mi{display:inline-block;padding:1px 7px;background:rgba(106,169,255,0.08);border-radius:5px;font-family:'Courier New',monospace;font-size:12px;color:var(--c1);}
+.intro-wrap {
+  max-width: 1300px;
+  margin: 0 auto 12px;
+  padding: 0 14px;
+}
+.intro-card {
+  background: linear-gradient(170deg, rgba(255,255,255,.055), rgba(255,255,255,.025));
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+}
+.intro-hdr {
+  padding: 12px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  background: rgba(0,0,0,.1);
+  border-bottom: 1px solid transparent;
+  transition: background .12s, border-color .2s;
+}
+.intro-hdr.open { border-bottom-color: var(--border); }
+.intro-hdr:hover { background: rgba(255,255,255,.03); }
+.intro-hdr h2 { font-size: 14px; font-weight: 700; }
+.itog { background: rgba(106,169,255,.14); border: 1px solid rgba(106,169,255,.25); color: var(--blue); border-radius: 7px; padding: 3px 10px; font-size: 10.5px; font-weight: 600; cursor: pointer; width: auto; transition: background .12s; }
+.itog:hover { background: rgba(106,169,255,.22); }
+.intro-body {
+  overflow: hidden;
+  max-height: 0;
+  transition: max-height .35s ease, padding .35s ease;
+  padding: 0 20px;
+}
+.intro-body.open { max-height: 600px; padding: 16px 20px; }
+.igrid  { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-bottom: 12px; }
+@media (max-width: 700px) { .igrid { grid-template-columns: 1fr; } }
+.igrid h3  { font-size: 12.5px; color: var(--blue); margin-bottom: 5px; font-weight: 700; }
+.igrid p   { font-size: 12px; line-height: 1.65; color: var(--muted); }
+.ins       { border-radius: 9px; padding: 10px 13px; font-size: 12px; line-height: 1.6; }
+.ins-blue  { border-left: 3px solid var(--blue);   background: rgba(106,169,255,.05); }
+.ins-teal  { border-left: 3px solid var(--teal);   background: rgba(100,240,200,.04); }
+.ins-grid  { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+@media (max-width: 700px) { .ins-grid { grid-template-columns: 1fr; } }
+.mi { display: inline-block; padding: 1px 6px; background: rgba(106,169,255,.1); border-radius: 4px; font-family: 'Courier New', monospace; font-size: 11.5px; color: var(--blue); }
 
-/* CLO grid */
-.clo-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
-@media(max-width:800px){.clo-grid{grid-template-columns:1fr;}}
+/* ── CLO analysis section ── */
+.clo-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; padding: 14px; }
+@media (max-width: 860px) { .clo-grid { grid-template-columns: 1fr; } }
+.coll-box { border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+.coll-hdr {
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  background: rgba(0,0,0,.12);
+  border-bottom: 1px solid transparent;
+  font-size: 12.5px;
+  font-weight: 600;
+  transition: background .12s, border-color .2s;
+}
+.coll-hdr:hover { background: rgba(255,255,255,.03); }
+.coll-hdr.open  { border-bottom-color: var(--border); }
+.coll-btn { font-size: 10.5px; color: var(--muted); background: rgba(255,255,255,.06); border: 1px solid var(--border); border-radius: 6px; padding: 2px 8px; cursor: pointer; width: auto; }
+.coll-body { overflow: hidden; max-height: 0; transition: max-height .35s ease, padding .35s ease; padding: 0 14px; }
+.coll-body.open { max-height: 500px; padding: 12px 14px; }
+.ctbl { width: 100%; border-collapse: collapse; font-size: 11.5px; }
+.ctbl th { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--border); color: var(--muted); font-weight: 600; font-size: 10.5px; }
+.ctbl td { padding: 6px 8px; border-bottom: 1px solid rgba(255,255,255,.04); }
+.t-green { background: rgba(100,240,200,.13); color: var(--teal); border-radius: 4px; padding: 1px 7px; font-size: 10.5px; font-weight: 700; }
+.t-yellow{ background: rgba(255,209,102,.13); color: var(--yellow); border-radius: 4px; padding: 1px 7px; font-size: 10.5px; font-weight: 700; }
+.t-blue  { background: rgba(106,169,255,.13); color: var(--blue); border-radius: 4px; padding: 1px 7px; font-size: 10.5px; font-weight: 700; }
+.chart-box { border-radius: 9px; background: rgba(0,0,0,.22); border: 1px solid var(--border); overflow: hidden; margin-top: 8px; }
 
-/* Complexity chart */
-.chart-box{border-radius:12px;background:rgba(0,0,0,0.22);border:1px solid rgba(255,255,255,0.06);overflow:hidden;margin-top:10px;}
+/* ── Modal ── */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(4,7,18,.93);
+  backdrop-filter: blur(8px);
+  padding: 20px;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto;
+}
+.modal-overlay.open { display: flex; }
+.modal-hdr { display: flex; align-items: center; gap: 12px; }
+.modal-hdr h3 { font-size: 16px; font-weight: 700; flex: 1; }
+.modal-close { padding: 5px 14px; border-radius: 8px; border: 1px solid rgba(255,92,122,.3); background: rgba(255,92,122,.14); color: var(--red); font-size: 12px; font-weight: 600; cursor: pointer; width: auto; }
+.modal-close:hover { background: rgba(255,92,122,.22); }
+.modal-body { flex: 1; }
+.modal-note { margin-top: 10px; font-size: 11.5px; color: var(--muted); line-height: 1.7; }
+.modal-note b { color: var(--text); }
 
-/* Footer */
-.footer{max-width:1280px;margin:14px auto 24px;padding:0 14px;font-size:11.5px;color:var(--muted);text-align:center;line-height:1.6;}
+/* ── Footer ── */
+.footer { max-width: 1300px; margin: 10px auto 24px; padding: 0 14px; font-size: 11.5px; color: var(--muted); text-align: center; line-height: 1.6; }
 
-/* Scrollbar */
-::-webkit-scrollbar{width:5px;height:5px;}
-::-webkit-scrollbar-track{background:transparent;}
-::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.12);border-radius:3px;}
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,.11); border-radius: 3px; }
 </style>
 </head>
 <body>
 
-<h1>LIS Algorithm Explorer</h1>
-<p class="subtitle">BCS 309 — Algorithms I &nbsp;|&nbsp; Longest Increasing Subsequence</p>
+<!-- PAGE HEADER -->
+<div class="page-hdr">
+  <h1>LIS Algorithm Explorer</h1>
+  <p>BCS 309 — Algorithms I &nbsp;|&nbsp; Longest Increasing Subsequence</p>
+</div>
 
-<!-- ════════════ INTRO SECTION ════════════ -->
-<div class="intro-section">
+<!-- INTRO (collapsed by default) -->
+<div class="intro-wrap">
   <div class="intro-card">
     <div class="intro-hdr" id="introHdr">
-      <h2>📘 Welcome — Start Here</h2>
-      <button class="itoggle" id="iToggleBtn">Collapse</button>
+      <h2>📘 What is LIS? — Click to expand</h2>
+      <button class="itog" id="iTogBtn">Expand</button>
     </div>
     <div class="intro-body" id="introBody">
       <div class="igrid">
         <div>
-          <h3>What is LIS?</h3>
-          <p>The <b>Longest Increasing Subsequence (LIS)</b> problem asks: given a sequence of numbers, find the longest subsequence where each element is <em>strictly greater</em> than the one before it.</p>
-          <p style="margin-top:8px;">In <span class="mi">[3, 1, 4, 1, 5, 9, 2, 6]</span>, one LIS is <span class="mi">[1, 4, 5, 9]</span> with length <b>4</b>. Elements don't have to be adjacent — they just need to preserve order and be increasing.</p>
+          <h3>The Problem</h3>
+          <p>Given an array, find the longest subsequence where every element is <em>strictly greater</em> than the previous. Elements don't need to be adjacent — just in order.<br><br>In <span class="mi">[3,1,4,1,5,9,2,6]</span>, one LIS is <span class="mi">[1,4,5,9]</span> — length <b>4</b>.</p>
         </div>
         <div>
-          <h3>Why Does It Matter?</h3>
-          <p>LIS is a classic showcase for <b>Dynamic Programming</b> and the power of <b>binary search optimization</b>. It appears in real-world problems:</p>
-          <p style="margin-top:6px;">
-            • Bioinformatics: DNA/RNA alignment<br>
-            • Scheduling: box stacking problems<br>
-            • Version control: diff/patch algorithms<br>
-            • Finance: stock trading strategies
-          </p>
+          <h3>Two Algorithms</h3>
+          <p><b style="color:var(--blue);">DP O(n²)</b> — Build a table where dp[i] = length of LIS ending at index i. For each i, scan all j &lt; i.<br><br><b style="color:var(--teal);">Patience Sort O(n log n)</b> — Place cards on sorted piles using binary search. Number of piles = LIS length.</p>
         </div>
         <div>
-          <h3>Two Approaches</h3>
-          <p><b style="color:var(--c1);">DP O(n²)</b> — For each element i, scan all j &lt; i. If A[j] &lt; A[i], try extending the LIS at j. Simple and illustrates optimal substructure perfectly.</p>
-          <p style="margin-top:8px;"><b style="color:var(--c2);">Patience Sort O(n log n)</b> — Use binary search to place each element on a pile. The number of piles equals the LIS length. Binary search cuts inner loop from O(n) to O(log n).</p>
+          <h3>Key Insight</h3>
+          <p>Patience sort maintains pile tops in sorted order. This invariant enables binary search, reducing the O(n) inner scan to O(log n) — turning O(n²) into O(n log n).</p>
         </div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-        <div class="ins ins-blue">
-          <b>Subsequence vs Substring:</b> A <em>subsequence</em> deletes elements but preserves order. <span class="mi">[1,4,9]</span> is a subsequence of <span class="mi">[3,1,4,1,5,9]</span>. A <em>substring</em> must be contiguous — adjacent elements only.
-        </div>
-        <div class="ins ins-green">
-          <b>Optimal Substructure:</b> The longest IS ending at index i depends only on the longest IS ending at indices 0..i-1. We can build big solutions from stored smaller ones — the hallmark of Dynamic Programming.
-        </div>
-        <div class="ins ins-blue" style="margin-bottom:0;">
-          <b>Overlapping Subproblems:</b> dp[j] is consulted by every future dp[i] where A[j] &lt; A[i]. Without DP, we'd recompute these subproblems exponentially. Memoization turns O(2ⁿ) into O(n²).
-        </div>
-        <div class="ins ins-green" style="margin-bottom:0;">
-          <b>Binary Search Key Insight:</b> In patience sort, pile tops are always in sorted order. This invariant lets us binary-search for the correct pile in O(log n), transforming the O(n²) DP into O(n log n).
-        </div>
+      <div class="ins-grid">
+        <div class="ins ins-blue"><b>Subsequence vs Substring:</b> A subsequence preserves order but skips elements. <span class="mi">[1,4,9]</span> is a subsequence of <span class="mi">[3,1,4,1,5,9]</span>. A substring must be contiguous.</div>
+        <div class="ins ins-teal"><b>Optimal Substructure:</b> The best LIS ending at i depends only on the best LIS ending at each j &lt; i where A[j] &lt; A[i]. Build big from stored small.</div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ════════════ MAIN TWO-COLUMN LAYOUT ════════════ -->
-<div class="wrap">
+<!-- MAIN TWO-COLUMN LAYOUT -->
+<div class="app-wrap">
 
-  <!-- LEFT: CONTROLS PANEL -->
-  <div class="card" id="controlsCard">
-    <h2>Controls</h2>
-
-    <div class="tabBar">
-      <button class="tab active" data-algo="dp">DP — O(n²)</button>
-      <button class="tab" data-algo="patience">Patience Sort — O(n log n)</button>
+  <!-- ══════════ LEFT: CONTROLS ══════════ -->
+  <div class="card" id="ctrlCard">
+    <div class="card-hdr">
+      Controls
+      <span class="badge badge-blue" id="algoTag">DP — O(n²)</span>
     </div>
 
-    <div class="controls">
-      <!-- Input -->
-      <label>Array Input (comma-separated, 2–14 elements)</label>
-      <input type="text" id="arrayInput" value="3, 1, 4, 1, 5, 9, 2, 6" class="mb8" placeholder="e.g. 3, 1, 4, 1, 5, 9, 2, 6"/>
+    <div class="tab-bar">
+      <button class="tab active" data-algo="dp">DP — O(n²)</button>
+      <button class="tab" data-algo="patience">Patience — O(n log n)</button>
+    </div>
 
+    <div class="ctrl-body">
+
+      <!-- Array input -->
+      <label>Array Input <span style="color:rgba(255,255,255,.3);font-size:10.5px;">(2–14 integers, comma-separated)</span></label>
+      <input type="text" id="arrInput" value="3, 1, 4, 1, 5, 9, 2, 6" class="mb6"/>
+      <div class="input-err" id="inputErr">⚠ Invalid input.</div>
+
+      <!-- Presets -->
       <label>Quick Presets</label>
-      <div class="row3 mb10">
-        <button class="secondary" id="btnRandom">🎲 Random</button>
-        <button class="secondary" id="btnWorst">↘ Worst</button>
-        <button class="secondary" id="btnBest">↗ Best</button>
+      <div class="g3 mb10">
+        <button id="btnRandom" class="btn-build-sub">🎲 Random</button>
+        <button id="btnWorst">↘ Worst</button>
+        <button id="btnBest">↗ Best</button>
       </div>
 
-      <!-- Playback controls -->
-      <label>Playback</label>
-      <div class="row2 mb8">
-        <button class="success" id="btnBuild">⚙ Build Steps</button>
-        <button class="secondary" id="btnStep" disabled>▶| Step</button>
+      <div class="sep"></div>
+
+      <!-- BUILD -->
+      <button class="btn-success mb6" id="btnBuild">⚙ Build Steps</button>
+
+      <!-- Playback -->
+      <div class="g2 mb6">
+        <button class="btn-primary" id="btnPlay"  disabled>▶ Play</button>
+        <button id="btnPause" disabled>⏸ Pause</button>
       </div>
-      <div class="row3 mb10">
-        <button class="primary" id="btnPlay" disabled>▶ Play</button>
-        <button class="secondary" id="btnPause" disabled>⏸ Pause</button>
-        <button class="danger" id="btnReset" disabled>↺ Reset</button>
+      <div class="g2 mb6">
+        <button id="btnStep"  disabled>▶| Step</button>
+        <button class="btn-danger" id="btnReset" disabled>↺ Reset</button>
       </div>
 
       <!-- Speed -->
-      <label>Animation Speed</label>
-      <input type="range" id="speedSlider" min="1" max="8" value="4"/>
-      <div class="speed-display" id="speedLabel">Speed: 1x</div>
+      <div class="speed-row mt8">
+        <label style="margin-bottom:0;">Animation Speed</label>
+        <span class="speed-badge" id="speedBadge">1×</span>
+      </div>
+      <input type="range" id="speedSlider" min="1" max="8" value="4" class="mb6"/>
 
       <!-- Step counter + status -->
-      <div style="display:grid;grid-template-columns:1fr auto;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.08);">
-        <div class="pill"><span>Step</span><b id="stepCounter">0 / 0</b></div>
-        <div class="status-wrap s-idle" id="statusWrap">
-          <div class="sdot" id="sDot"></div>
-          <span id="statusText" style="font-size:11.5px;color:var(--muted);">Idle</span>
-        </div>
+      <div class="status-row">
+        <div class="status-dot" id="sDot"></div>
+        <span class="status-text" id="statusText">Idle — click Build Steps</span>
+        <span style="margin-left:auto;font-size:11px;color:var(--muted);" id="stepCounter">0 / 0</span>
       </div>
+      <div id="statusWrap" class="s-idle" style="display:none;"></div>
 
       <!-- Stats -->
-      <div class="stat-grid">
-        <div class="pill"><span>Comparisons</span><b id="statCmp">0</b></div>
-        <div class="pill"><span id="stat2Lbl">DP Updates</span><b id="statUpd">0</b></div>
-        <div class="pill"><span>Binary Searches</span><b id="statBS">0</b></div>
-        <div class="pill"><span>Total Steps</span><b id="statTot">0</b></div>
-        <div class="pill wide lis-result" id="resultPill" style="display:none;">
-          <span>✨ LIS Length</span><b id="statLIS">—</b>
+      <div class="stat-row mt8">
+        <div class="pill"><span>Comparisons</span><b id="stCmp">0</b></div>
+        <div class="pill"><span id="st2lbl">DP Updates</span><b id="stUpd">0</b></div>
+        <div class="pill"><span>Binary Searches</span><b id="stBS">0</b></div>
+        <div class="pill"><span>Total Steps</span><b id="stTot">0</b></div>
+        <div class="pill result" id="resultPill">
+          <div class="result-label">✨ LIS RESULT</div>
+          <div class="result-val">Length: <span id="resLen">—</span></div>
+          <div class="result-seq" id="resSeq"></div>
+          <div class="result-indices" id="resIdx" style="font-size:10.5px;color:var(--muted);font-family:'Courier New',monospace;"></div>
         </div>
       </div>
+
+      <div class="sep"></div>
 
       <!-- Pseudocode -->
-      <div style="margin-top:10px;">
-        <label>Pseudocode <span style="font-size:10px;opacity:.4;">(hover a line for explanation)</span></label>
-        <div class="pseudo-wrap" id="pseudoWrap"></div>
-        <div class="pseudo-tip-bar" id="pseudoTipBar">Hover any line above to see what it does.</div>
+      <label>Pseudocode <span style="color:rgba(255,255,255,.25);font-size:10px;">(hover a line to explain)</span></label>
+      <div class="pseudo-outer">
+        <div class="pseudo-scroll" id="pseudoScroll"></div>
+        <div class="pseudo-tip" id="pseudoTip">Hover any line above to see what it does.</div>
       </div>
-    </div>
-  </div><!-- end left panel -->
 
-  <!-- RIGHT: VISUALIZATION PANEL -->
+    </div><!-- /ctrl-body -->
+  </div><!-- /left card -->
+
+  <!-- ══════════ RIGHT: VISUALIZATION ══════════ -->
   <div class="card">
-    <h2 id="vizTitle">Visualization — DP O(n²)</h2>
-    <div class="viz">
+    <div class="card-hdr" id="vizCardHdr">
+      Visualization
+      <span class="badge badge-blue" id="vizTag">DP — O(n²)</span>
+    </div>
 
-      <!-- Banner -->
-      <div class="banner" id="algoBanner">
-        The <b>DP approach</b> fills a table <b>dp[i]</b> = length of longest increasing subsequence <em>ending at index i</em>. For each pair (j, i) where j &lt; i and A[j] &lt; A[i], we extend: dp[i] = max(dp[i], dp[j]+1). Watch comparisons and table updates unfold step by step.
+    <div class="viz-body">
+
+      <!-- Algo banner -->
+      <div class="algo-banner" id="algoBanner">
+        The <b>DP approach</b> fills table <b>dp[i]</b> = length of LIS ending at A[i]. For each i, it scans all j &lt; i: if A[j] &lt; A[i], try dp[i] = dp[j]+1. The largest dp[i] is the answer.
       </div>
 
-      <!-- Array bars -->
-      <div class="viz-section" style="margin-bottom:14px;">
-        <div class="viz-sec-hdr">
-          <div class="sec-title">Array Visualization</div>
-          <button class="expand-btn" onclick="openModal('array')">⤢ Expand</button>
-        </div>
-        <div class="svg-box">
-          <svg id="arraySVG" width="100%" style="height:200px;" viewBox="0 0 700 200" preserveAspectRatio="xMidYMid meet"></svg>
-        </div>
-        <div class="legend" id="colorLegend">
-          <div class="leg"><div class="ldot" style="background:var(--c1);"></div>Normal</div>
-          <div class="leg"><div class="ldot" style="background:var(--c4);"></div>Active (i)</div>
-          <div class="leg"><div class="ldot" style="background:var(--c3);"></div>Comparing (j)</div>
-          <div class="leg"><div class="ldot" style="background:var(--c2);"></div>LIS / Updated</div>
-          <div class="leg"><div class="ldot" style="background:#555;"></div>Skipped</div>
-        </div>
+      <!-- ARRAY BARS -->
+      <div class="viz-hdr">
+        <span class="viz-label">Array</span>
+        <button class="expand-btn" onclick="openModal('array')">⤢ Expand</button>
       </div>
+      <div class="svg-wrap mb10">
+        <svg id="arraySVG" style="height:190px;" viewBox="0 0 700 190" preserveAspectRatio="xMidYMid meet"></svg>
+      </div>
+      <div class="legend" id="arrayLegend"></div>
 
-      <!-- DP Table (shown for DP algo) -->
-      <div id="dpSection" style="margin-bottom:14px;">
-        <div class="viz-sec-hdr">
-          <div class="sec-title">DP Table</div>
+      <div class="sep"></div>
+
+      <!-- DP TABLE -->
+      <div id="dpSection">
+        <div class="viz-hdr" style="margin-top:10px;">
+          <span class="viz-label">DP Table</span>
           <button class="expand-btn" onclick="openModal('dp')">⤢ Expand</button>
         </div>
-        <div class="dp-scroll">
-          <table class="dpt" id="dpTable"></table>
+        <div class="dp-scroll mb10">
+          <table class="dp-tbl" id="dpTbl"></table>
         </div>
       </div>
 
-      <!-- Patience Piles (shown for patience algo) -->
-      <div id="patSection" style="display:none;margin-bottom:14px;">
-        <div class="viz-sec-hdr">
-          <div class="sec-title">Patience Piles
-            <span style="font-size:10px;color:rgba(183,192,255,0.4);font-weight:400;margin-left:4px;">(pile tops always sorted — enables binary search)</span>
-          </div>
+      <!-- PATIENCE PILES -->
+      <div id="patSection" style="display:none;">
+        <div class="viz-hdr" style="margin-top:10px;">
+          <span class="viz-label">Patience Piles</span>
           <button class="expand-btn" onclick="openModal('piles')">⤢ Expand</button>
         </div>
-        <div class="svg-box">
-          <svg id="pilesSVG" width="100%" style="height:240px;" viewBox="0 0 700 240" preserveAspectRatio="xMidYMid meet"></svg>
+        <div class="svg-wrap mb10">
+          <svg id="pilesSVG" style="height:230px;" viewBox="0 0 700 230" preserveAspectRatio="xMidYMid meet"></svg>
         </div>
-        <div class="legend" id="patLegend">
-          <div class="leg"><div class="ldot" style="background:var(--c4);"></div>Current element</div>
-          <div class="leg"><div class="ldot" style="background:var(--c6);"></div>Search range</div>
-          <div class="leg"><div class="ldot" style="background:var(--c3);"></div>Mid pile</div>
-          <div class="leg"><div class="ldot" style="background:var(--c2);"></div>Placed here</div>
-          <div class="leg"><div class="ldot" style="background:var(--c5);opacity:.7;"></div>Predecessor ←</div>
+        <div class="legend" id="pilesLegend"></div>
+      </div>
+
+      <div class="sep"></div>
+
+      <!-- FINAL RESULT -->
+      <div id="finalResult">
+        <div class="fr-title">✅ Algorithm Complete — LIS Found</div>
+        <div class="fr-length" id="frLen">—</div>
+        <div class="fr-seq-label">One valid LIS sequence:</div>
+        <div class="fr-seq" id="frSeq">—</div>
+        <div class="fr-indices" id="frIdx"></div>
+      </div>
+
+      <!-- STEP EXPLANATION -->
+      <div class="viz-hdr">
+        <span class="viz-label">Step Explanation</span>
+      </div>
+      <div class="step-explain" id="stepExplain">
+        Click <b>Build Steps</b> to prepare the algorithm, then use <b>▶ Play</b> or <b>▶| Step</b> to watch it run.
+      </div>
+
+      <!-- HISTORY -->
+      <div class="hist-coll" id="histColl">
+        <div class="hist-coll-hdr" onclick="toggleHist()">
+          📋 Step History <span id="histCount" style="font-weight:400;font-size:11px;color:var(--muted);margin-left:4px;"></span>
+          <button class="hist-toggle" id="histTogBtn">Show</button>
+        </div>
+        <div class="hist-body" id="histBody">
+          <table class="hist-tbl">
+            <thead><tr><th style="width:28px;">#</th><th style="width:22px;"></th><th>Action</th><th style="width:130px;">State</th></tr></thead>
+            <tbody id="histRows"></tbody>
+          </table>
         </div>
       </div>
 
-      <!-- Step explanation -->
-      <div style="margin-bottom:14px;">
-        <div class="sec-title">Step Explanation</div>
-        <div class="explain" id="stepExplain">
-          Click <b>Build Steps</b> to generate algorithm steps, then use <b>▶ Play</b> or <b>▶| Step</b> to animate.
-        </div>
-      </div>
+    </div><!-- /viz-body -->
+  </div><!-- /right card -->
 
-      <!-- History table -->
-      <div>
-        <div class="coll" id="histColl">
-          <div class="coll-hdr" onclick="toggleColl(this)">
-            <h3>📋 Step History <span id="histCount" style="font-weight:400;color:var(--muted);font-size:12px;"></span></h3>
-            <button class="coll-btn">Collapse</button>
-          </div>
-          <div class="coll-body">
-            <div class="hist-wrap">
-              <table class="hist">
-                <thead><tr><th style="width:36px;">#</th><th>Action</th><th style="width:140px;">State (dp / piles)</th></tr></thead>
-                <tbody id="histBody"></tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      </div>
+</div><!-- /app-wrap -->
 
-    </div>
-  </div><!-- end right panel -->
-</div><!-- end wrap -->
-
-<!-- ════════════ FULL-WIDTH CLO ANALYSIS ════════════ -->
-<div class="full-wrap">
+<!-- CLO ANALYSIS -->
+<div class="section-wrap">
   <div class="card">
-    <h2>📊 CLO Analysis — Complexity, Searching &amp; Design Paradigm</h2>
-    <div style="padding:14px;">
-      <div class="clo-grid">
+    <div class="card-hdr">📊 CLO Analysis — Complexity, Searching &amp; Design Paradigm</div>
+    <div class="clo-grid">
 
-        <!-- CLO-1: Complexity -->
-        <div class="coll">
-          <div class="coll-hdr" onclick="toggleColl(this)">
-            <h3 style="color:var(--c1);">CLO-1: Time &amp; Space Complexity</h3>
-            <button class="coll-btn">Expand</button>
-          </div>
-          <div class="coll-body coll-closed">
-            <table class="ctbl" style="margin-bottom:12px;">
-              <thead><tr><th>Algorithm</th><th>Time</th><th>Space</th><th>Notes</th></tr></thead>
-              <tbody>
-                <tr><td><b>DP</b></td><td><span class="tag t-yellow">O(n²)</span></td><td><span class="tag t-blue">O(n)</span></td><td style="color:var(--muted);font-size:11px;">n×n comparisons</td></tr>
-                <tr><td><b>Patience</b></td><td><span class="tag t-green">O(n log n)</span></td><td><span class="tag t-blue">O(n)</span></td><td style="color:var(--muted);font-size:11px;">n elements × log n search</td></tr>
-              </tbody>
-            </table>
-            <div class="ins ins-yellow">
-              <b>Why does binary search save us?</b> The DP inner loop scans O(n) elements. Patience sort replaces this with O(log n) binary search on the pile tops — which are always sorted. Total: n × log n.
-            </div>
-            <label style="margin-top:10px;">Adjust n to see growth: <b id="chartNLbl">20</b></label>
-            <input type="range" id="chartN" min="5" max="80" value="20" oninput="updChart(this.value)" style="margin-top:4px;"/>
-            <div class="chart-box">
-              <svg id="cplxChart" width="100%" style="height:180px;" viewBox="0 0 400 180"></svg>
-            </div>
-            <div style="margin-top:8px;display:flex;gap:12px;justify-content:center;font-size:11px;">
-              <span style="color:var(--c5);">— O(n²) DP</span>
-              <span style="color:var(--c2);">— O(n log n) Patience</span>
-            </div>
+      <div class="coll-box">
+        <div class="coll-hdr" onclick="toggleColl(this)">
+          <span style="color:var(--blue);">CLO-1: Complexity</span>
+          <button class="coll-btn">Expand</button>
+        </div>
+        <div class="coll-body">
+          <table class="ctbl" style="margin-bottom:10px;">
+            <thead><tr><th>Algorithm</th><th>Time</th><th>Space</th></tr></thead>
+            <tbody>
+              <tr><td>DP</td><td><span class="t-yellow">O(n²)</span></td><td><span class="t-blue">O(n)</span></td></tr>
+              <tr><td>Patience</td><td><span class="t-green">O(n log n)</span></td><td><span class="t-blue">O(n)</span></td></tr>
+            </tbody>
+          </table>
+          <div class="ins ins-blue" style="margin-bottom:10px;font-size:11.5px;">Binary search replaces the O(n) inner scan. Since pile tops are always sorted, each element is placed in O(log n). Total: n × log n.</div>
+          <div class="speed-row"><label style="margin:0;">Adjust n: <b id="chartNLbl">20</b></label></div>
+          <input type="range" id="chartN" min="5" max="80" value="20" oninput="updChart(this.value)"/>
+          <div class="chart-box"><svg id="cplxChart" style="height:160px;" viewBox="0 0 380 160"></svg></div>
+          <div style="display:flex;gap:14px;justify-content:center;font-size:11px;margin-top:7px;">
+            <span style="color:var(--red);">— O(n²) DP</span>
+            <span style="color:var(--teal);">— O(n log n) Patience</span>
           </div>
         </div>
+      </div>
 
-        <!-- CLO-2: Binary Search -->
-        <div class="coll">
-          <div class="coll-hdr" onclick="toggleColl(this)">
-            <h3 style="color:var(--c2);">CLO-2: Role of Binary Search</h3>
-            <button class="coll-btn">Expand</button>
-          </div>
-          <div class="coll-body coll-closed">
-            <div class="ins ins-green">
-              <b>Key invariant:</b> Pile tops are always in strictly increasing order. This is maintained because we only replace a pile top with a <em>smaller or equal</em> value, and new piles are always larger than all existing tops.
-            </div>
-            <p style="font-size:12.5px;line-height:1.7;margin:8px 0;">Since pile tops are sorted, we can use <b>binary search</b> to find the leftmost pile whose top ≥ current element. We search for the position where <span class="mi">piles[mid] ≥ val</span>.</p>
-            <table class="ctbl">
-              <thead><tr><th>Operation</th><th>Naive Scan</th><th>With Binary Search</th></tr></thead>
-              <tbody>
-                <tr><td>Find correct pile</td><td style="color:var(--c5);">O(n) linear</td><td style="color:var(--c2);">O(log n)</td></tr>
-                <tr><td>Per element total</td><td style="color:var(--c5);">O(n)</td><td style="color:var(--c2);">O(log n)</td></tr>
-                <tr><td><b>Overall</b></td><td style="color:var(--c5);">O(n²)</td><td style="color:var(--c2);font-weight:700;">O(n log n)</td></tr>
-              </tbody>
-            </table>
-            <div class="ins ins-blue" style="margin-top:10px;margin-bottom:0;">
-              In the <b>Patience Sort</b> tab, watch the purple dashed rectangle narrow as binary search zeroes in on the correct pile. The yellow triangle marks the current mid-point.
-            </div>
-          </div>
+      <div class="coll-box">
+        <div class="coll-hdr" onclick="toggleColl(this)">
+          <span style="color:var(--teal);">CLO-2: Binary Search Role</span>
+          <button class="coll-btn">Expand</button>
         </div>
-
-        <!-- CLO-3: Dynamic Programming -->
-        <div class="coll">
-          <div class="coll-hdr" onclick="toggleColl(this)">
-            <h3 style="color:var(--c3);">CLO-3: Dynamic Programming</h3>
-            <button class="coll-btn">Expand</button>
-          </div>
-          <div class="coll-body coll-closed">
-            <div class="ins ins-yellow">
-              <b>DP formulation:</b><br>
-              State: <span class="mi">dp[i]</span> = length of LIS ending at index i<br>
-              Transition: <span class="mi">dp[i] = max(dp[j]+1)</span> ∀ j&lt;i, A[j]&lt;A[i]<br>
-              Base case: <span class="mi">dp[i] = 1</span><br>
-              Answer: <span class="mi">max(dp[0..n-1])</span>
-            </div>
-            <div class="ins ins-blue" style="margin-bottom:10px;">
-              <b>Optimal Substructure:</b> The LIS ending at i can be extended from the LIS ending at any j where A[j] &lt; A[i]. The optimal choice at i depends on the optimal choices for all j &lt; i.
-            </div>
-            <div class="ins ins-green" style="margin-bottom:0;">
-              <b>Overlapping Subproblems:</b> dp[j] is used by every future dp[i] (where A[j] &lt; A[i]). Without memoization, recomputing these overlapping subproblems leads to exponential time — storing dp[] makes it O(n²).
-            </div>
-          </div>
+        <div class="coll-body">
+          <div class="ins ins-teal" style="margin-bottom:10px;font-size:11.5px;"><b>Sorted invariant:</b> Pile tops are always strictly increasing. So binary search applies: find the leftmost pile whose top ≥ A[i] in O(log n).</div>
+          <table class="ctbl">
+            <thead><tr><th>Step</th><th>DP scan</th><th>Binary search</th></tr></thead>
+            <tbody>
+              <tr><td>Find pile</td><td style="color:var(--red);">O(n)</td><td style="color:var(--teal);">O(log n)</td></tr>
+              <tr><td>Per element</td><td style="color:var(--red);">O(n)</td><td style="color:var(--teal);">O(log n)</td></tr>
+              <tr><td><b>Total</b></td><td style="color:var(--red);">O(n²)</td><td style="color:var(--teal);font-weight:700;">O(n log n)</td></tr>
+            </tbody>
+          </table>
+          <div class="ins ins-blue" style="margin-top:10px;font-size:11.5px;">In the Patience tab, the purple dashed box is the active search range. It narrows each step — that narrowing is O(log n) in action.</div>
         </div>
+      </div>
 
-      </div><!-- end clo-grid -->
+      <div class="coll-box">
+        <div class="coll-hdr" onclick="toggleColl(this)">
+          <span style="color:var(--yellow);">CLO-3: Dynamic Programming</span>
+          <button class="coll-btn">Expand</button>
+        </div>
+        <div class="coll-body">
+          <div class="ins ins-teal" style="margin-bottom:10px;font-size:11.5px;">
+            <b>Recurrence:</b><br>
+            dp[i] = 1 (base)<br>
+            dp[i] = max(dp[j]+1) ∀ j&lt;i, A[j]&lt;A[i]<br>
+            Answer = max(dp[0..n-1])
+          </div>
+          <div class="ins ins-blue" style="margin-bottom:10px;font-size:11.5px;"><b>Optimal Substructure:</b> The best LIS ending at i uses the best LIS ending at some earlier j. We only need the optimal, not all possibilities.</div>
+          <div class="ins ins-teal" style="font-size:11.5px;"><b>Overlapping Subproblems:</b> dp[j] is reused by every future dp[i] where A[j] &lt; A[i]. Storing dp[] avoids recomputation — turning exponential recursion into O(n²).</div>
+        </div>
+      </div>
+
     </div>
   </div>
 </div>
 
-<!-- ════════════ MODAL OVERLAY ════════════ -->
+<!-- MODAL -->
 <div class="modal-overlay" id="modalOverlay">
-  <div class="modal-header">
+  <div class="modal-hdr">
     <h3 id="modalTitle">Visualization</h3>
     <button class="modal-close" onclick="closeModal()">✕ Close</button>
   </div>
-  <div class="modal-content" id="modalContent"></div>
+  <div class="modal-body" id="modalBody"></div>
 </div>
 
-<!-- ════════════ FOOTER ════════════ -->
+<!-- FOOTER -->
 <div class="footer">
-  <b>LIS connects to:</b> Longest Common Subsequence (LCS), Edit Distance, Box Stacking, Chain of Pairs, and Patience Sorting.<br>
-  Part of <b>BCS 309 — Algorithms I</b> &nbsp;|&nbsp; Canadian University Dubai
+  <b>LIS connects to:</b> LCS, Edit Distance, Box Stacking, Patience Sorting, Chain of Pairs.<br>
+  <b>BCS 309 — Algorithms I</b> &nbsp;|&nbsp; Canadian University Dubai
 </div>
 
-<!-- ════════════════════════════════════════════════════════
+<!-- ═══════════════════════════════════════════════════
      JAVASCRIPT
-     ════════════════════════════════════════════════════════ -->
+     ═══════════════════════════════════════════════════ -->
 <script>
 'use strict';
 
-/* ── Global State ─────────────────────────────────────────── */
+/* ═══════════════ STATE ═══════════════ */
 const S = {
-  algo: 'dp',
-  arr: [3, 1, 4, 1, 5, 9, 2, 6],
-  steps: [],
-  cur: 0,
-  playing: false,
-  timer: null,
-  speed: 1.0,
-  status: 'idle',
-  histRows: 0
+  algo:   'dp',
+  arr:    [3,1,4,1,5,9,2,6],
+  steps:  [],
+  cur:    0,
+  status: 'idle',   // idle | ready | playing | paused | done
+  timer:  null
 };
-
-/* Speed map: slider value 1-8 → multiplier */
 const SPMAP = [0.25, 0.5, 0.75, 1, 1.5, 2, 3, 4];
 const $ = id => document.getElementById(id);
 
-/* ── Pseudocode Data ──────────────────────────────────────── */
+/* ═══════════════ PSEUDOCODE DATA ═══════════════ */
 const PSEUDO = {
   dp: [
-    { c: 'function LIS_DP(A[0..n-1]):', t: 'Main function — takes the input array A of length n' },
-    { c: '  dp[i] = 1  for all i', t: 'Base case: every element alone is a subsequence of length 1' },
-    { c: '  for i = 0 to n-1:', t: 'Outer loop — compute the LIS length ending at each index i' },
-    { c: '    for j = 0 to i-1:', t: 'Inner loop — check all previous elements j < i as possible predecessors' },
-    { c: '      if A[j] < A[i]:', t: 'Can A[j] precede A[i]? Only if strictly less (for strictly increasing)' },
-    { c: '        dp[i] = max(dp[i], dp[j]+1)', t: 'Extend the LIS ending at j by one more element (A[i])' },
-    { c: '  return max(dp)', t: 'The final LIS length is the maximum value anywhere in dp[]' },
+    { c:'function LIS_DP(A[0..n-1]):', t:'Entry point — input is array A of n integers.' },
+    { c:'  dp[i] = 1  for all i',       t:'Base case: every single element is itself an increasing subsequence of length 1.' },
+    { c:'  for i = 0 to n-1:',          t:'Outer loop — for each index i, compute dp[i] = longest IS ending AT A[i].' },
+    { c:'    for j = 0 to i-1:',        t:'Inner loop — test every prior index j as a potential predecessor of A[i].' },
+    { c:'      if A[j] < A[i]:',        t:'Strictly increasing check: can A[j] come before A[i] in the subsequence?' },
+    { c:'        dp[i] = max(dp[i], dp[j]+1)', t:'Extend: the LIS ending at j, plus A[i], gives a longer subsequence.' },
+    { c:'  return max(dp[0..n-1])',     t:'Answer: the maximum value in dp[] is the LIS length.' },
   ],
   patience: [
-    { c: 'function LIS_PATIENCE(A[0..n-1]):', t: 'Main function — O(n log n) patience sort with predecessor tracking for full reconstruction' },
-    { c: '  tails ← [],  tailIdx ← [],  pred ← [-1…]', t: 'tails[p]=smallest tail value for length p+1. tailIdx[p]=its original index. pred[i]=which index preceded A[i] in its chain.' },
-    { c: '  for i = 0 to n-1:', t: 'Process each element A[i] one at a time left to right' },
-    { c: '    lo←0,  hi←|tails|', t: 'Binary search over all current piles. lo=left bound, hi=right bound (exclusive).' },
-    { c: '    while lo < hi:', t: 'Standard left-biased binary search loop — runs O(log |tails|) iterations' },
-    { c: '      mid ← ⌊(lo + hi) / 2⌋', t: 'Compute middle index of current search range' },
-    { c: '      if tails[mid] < A[i]:', t: 'This pile top is too small — A[i] must go further right' },
-    { c: '        lo ← mid + 1', t: 'Discard left half including mid, move lower bound right' },
-    { c: '      else:  hi ← mid', t: 'Pile top ≥ A[i] — this pile could work, but try to find a smaller index going left' },
-    { c: '    if lo > 0:', t: 'There is at least one pile to the left of where A[i] lands — record it as predecessor' },
-    { c: '      pred[i] ← tailIdx[lo - 1]', t: 'Snapshot NOW (before overwriting pile lo): the top of pile lo-1 is A[i]\'s predecessor in the chain' },
-    { c: '    if lo == |tails|:', t: 'lo reached the end: A[i] is larger than ALL pile tops — start a new pile' },
-    { c: '      tails.push(A[i]),  tailIdx.push(i)', t: 'New pile created. LIS length grows by 1. Record which original index holds this pile top.' },
-    { c: '    else:', t: 'lo is within range: replace an existing pile top with a smaller value' },
-    { c: '      tails[lo]←A[i],  tailIdx[lo]←i', t: 'Replace pile top AND update tailIdx so we remember A[i] now owns this pile position' },
-    { c: '  Reconstruct: trace pred[] from tailIdx[last]', t: 'Follow pred[] pointers backwards from the last pile\'s index to recover the actual LIS sequence' },
-    { c: '  return |tails|  // = LIS length', t: 'Number of piles = LIS length. The predecessor chain gives the actual subsequence.' },
+    { c:'function LIS_PATIENCE(A[0..n-1]):',       t:'Entry point — O(n log n) algorithm using patience sorting + back-pointers.' },
+    { c:'  tails=[], tailIdx=[], pred=[-1...-1]', t:'tails[p]=current top value of pile p. tailIdx[p]=its original index. pred[i]=predecessor of A[i] in the chain.' },
+    { c:'  for i = 0 to n-1:',                     t:'Process each element one at a time from left to right.' },
+    { c:'    lo=0,  hi=|tails|',                   t:'Set binary search range over all current piles.' },
+    { c:'    while lo < hi:',                       t:'Left-biased binary search — find leftmost pile top ≥ A[i].' },
+    { c:'      mid = ⌊(lo+hi)/2⌋',                t:'Compute midpoint of current search range.' },
+    { c:'      if tails[mid] < A[i]:',             t:'Pile top is too small — A[i] must go to the right.' },
+    { c:'        lo = mid + 1',                    t:'Discard left half, advance lower bound.' },
+    { c:'      else: hi = mid',                    t:'Pile top ≥ A[i] — this could work, but look left for a smaller index.' },
+    { c:'    if lo > 0:',                          t:'A predecessor exists: pile lo-1 is the longest chain A[i] can extend.' },
+    { c:'      pred[i] = tailIdx[lo-1]',           t:'⚠ Snapshot NOW before tailIdx[lo] is overwritten. This is the predecessor link.' },
+    { c:'    if lo == |tails|:',                   t:'A[i] is larger than all pile tops — start a new pile. LIS length increases!' },
+    { c:'      tails.push(A[i]),  tailIdx.push(i)',t:'Append new pile. tailIdx records which original index owns this pile top.' },
+    { c:'    else:',                               t:'A[i] replaces an existing pile top — same LIS length, better (smaller) future options.' },
+    { c:'      tails[lo]=A[i],  tailIdx[lo]=i',   t:'Replace value AND update tailIdx so we know A[i] now owns pile lo.' },
+    { c:'  Reconstruct via pred[] from tailIdx[last]', t:'Follow pred[] pointers backward from the last pile to get the actual LIS sequence.' },
+    { c:'  return |tails|  // = LIS length',       t:'Number of piles equals LIS length — this is the patience sorting theorem.' },
   ]
 };
 
-/* ── Step Generation: DP O(n²) ───────────────────────────── */
+/* ═══════════════ STEP GENERATORS ═══════════════ */
+
+/* ── DP O(n²) ── */
 function genDP(arr) {
   const n = arr.length;
-  const dp = new Array(n).fill(1);
+  const dp   = new Array(n).fill(1);
   const prev = new Array(n).fill(-1);
   const steps = [];
   let cmp = 0, upd = 0;
 
-  const snap = (type, hl, pl, desc, extras = {}) => {
-    steps.push({ type, highlights: hl, pseudoLine: pl, desc,
-      dp: dp.slice(), prev: prev.slice(),
-      stats: { cmp, upd, bs: 0, tot: steps.length + 1 }, ...extras });
-  };
+  const snap = (type, hl, pl, desc, x = {}) => steps.push({
+    type, hl, pl, desc,
+    dp: dp.slice(), prev: prev.slice(),
+    stats: { cmp, upd, bs: 0, tot: steps.length + 1 }, ...x
+  });
 
-  snap('start', {}, 0, 'Starting LIS Dynamic Programming. We will compute dp[i] = length of longest increasing subsequence ending at each index i.');
-
-  snap('init', {}, 1, `Initialize dp[0..${n-1}] = 1. Each element alone forms a valid increasing subsequence of length 1.`);
+  snap('start', {}, 0, 'DP starts. We will compute dp[i] = length of longest increasing subsequence ending exactly at A[i].');
+  snap('init',  {}, 1, `Initialize dp[0..${n-1}] = 1. Each element alone is a valid LIS of length 1.`);
 
   for (let i = 0; i < n; i++) {
-    snap('outer', { [i]: 'cur' }, 2, `Outer loop: i = ${i}. Computing dp[${i}] — LIS ending at A[${i}] = ${arr[i]}.`);
-
+    snap('outer', {[i]:'i'}, 2, `i = ${i}: computing dp[${i}] for A[${i}] = ${arr[i]}.`);
     for (let j = 0; j < i; j++) {
       cmp++;
-      snap('compare', { [i]: 'cur', [j]: 'cmp' }, 4, `Compare A[${j}] = ${arr[j]} and A[${i}] = ${arr[i]}. Is ${arr[j]} < ${arr[i]}?`, { i, j });
-
+      snap('cmp', {[i]:'i',[j]:'j'}, 4, `Compare A[${j}]=${arr[j]} and A[${i}]=${arr[i]}: is ${arr[j]} < ${arr[i]}?`, { i, j });
       if (arr[j] < arr[i]) {
         if (dp[j] + 1 > dp[i]) {
-          upd++;
-          dp[i] = dp[j] + 1;
-          prev[i] = j;
-          snap('update', { [i]: 'upd', [j]: 'cmp' }, 5, `✓ A[${j}]=${arr[j]} < A[${i}]=${arr[i]}  →  dp[${i}] = dp[${j}]+1 = ${dp[i]}. Extended LIS through index ${j}!`, { i, j });
+          upd++; dp[i] = dp[j] + 1; prev[i] = j;
+          snap('upd', {[i]:'upd',[j]:'j'}, 5, `✓ Yes → dp[${i}] = dp[${j}]+1 = ${dp[i]}. Extended chain through index ${j}.`, { i, j });
         } else {
-          snap('noimprove', { [i]: 'cur', [j]: 'cmp' }, 5, `A[${j}]=${arr[j]} < A[${i}]=${arr[i]}, but dp[${j}]+1=${dp[j]+1} ≤ dp[${i}]=${dp[i]}. No improvement needed.`, { i, j });
+          snap('noimpr', {[i]:'i',[j]:'j'}, 5, `A[${j}] < A[${i}] but dp[${j}]+1=${dp[j]+1} ≤ dp[${i}]=${dp[i]}. No improvement.`, { i, j });
         }
       } else {
-        snap('skip', { [i]: 'cur', [j]: 'skip' }, 4, `✗ A[${j}]=${arr[j]} ≥ A[${i}]=${arr[i]}. Not strictly increasing — cannot extend. Skip.`, { i, j });
+        snap('skip', {[i]:'i',[j]:'skip'}, 4, `✗ A[${j}]=${arr[j]} ≥ A[${i}]=${arr[i]}. Not strictly increasing — skip.`, { i, j });
       }
     }
   }
 
-  // Reconstruct LIS path
   const maxLen = Math.max(...dp);
-  let end = 0;
-  for (let i = 0; i < n; i++) if (dp[i] > dp[end]) end = i;
+  let end = dp.indexOf(maxLen);
   const path = [];
   for (let c = end; c !== -1; c = prev[c]) path.unshift(c);
-  const hl = {};
-  path.forEach(idx => { hl[idx] = 'lis'; });
-
-  snap('done', hl, 6, `✅ Done! LIS length = ${maxLen}. Sequence: [${path.map(i => arr[i]).join(', ')}] at indices [${path.join(', ')}].`,
-    { lisLen: maxLen, lisPath: path });
-
+  const hlDone = {}; path.forEach(k => { hlDone[k] = 'lis'; });
+  snap('done', hlDone, 6,
+    `✅ LIS length = ${maxLen}. Sequence: [${path.map(k => arr[k]).join(', ')}] at indices [${path.join(', ')}].`,
+    { lisLen: maxLen, lisPath: path, lisVals: path.map(k => arr[k]) });
   return steps;
 }
 
-/* ── Step Generation: Patience Sort O(n log n) — FIXED ──────
-   Uses tailIndices + predecessor arrays for correct reconstruction.
-   tails[p]   = current smallest tail VALUE for increasing subseq of length p+1
-   tailIdx[p] = original array index of that tail value
-   pred[i]    = original index that precedes A[i] in its LIS chain
-   ─────────────────────────────────────────────────────────── */
+/* ── Patience Sort O(n log n) — correct with predecessor tracking ── */
 function genPatience(arr) {
   const n = arr.length;
-  const tails    = [];           // tails[p] = current top value of pile p
-  const tailIdx  = [];           // tailIdx[p] = original index owning that top
-  const pred     = new Array(n).fill(-1); // predecessor chain
-  const fullPiles = [];          // full card stacks for visualization
-  const steps    = [];
+  const tails   = [];
+  const tailIdx = [];
+  const pred    = new Array(n).fill(-1);
+  const piles   = [];       // full stacks: piles[p] = [{val,idx},...]
+  const steps   = [];
   let bs = 0, cmp = 0;
 
-  // Deep-copy fullPiles for snapshot
-  const snapFull = () => fullPiles.map(p => p.slice());
+  const snapFull = () => piles.map(p => p.slice());
 
-  const snap = (type, hl, pl, desc, extras = {}) => {
-    steps.push({
-      type, highlights: hl, pseudoLine: pl, desc,
-      tops: tails.slice(), full: snapFull(),
-      tailIdx: tailIdx.slice(), pred: pred.slice(),
-      stats: { cmp, upd: 0, bs, tot: steps.length + 1 }, ...extras
-    });
-  };
+  const snap = (type, hl, pl, desc, x = {}) => steps.push({
+    type, hl, pl, desc,
+    tops: tails.slice(), full: snapFull(),
+    tIdx: tailIdx.slice(), pred: pred.slice(),
+    stats: { cmp, upd: 0, bs, tot: steps.length + 1 }, ...x
+  });
 
   snap('start', {}, 0,
-    'Starting Patience Sort with predecessor tracking. tails[] holds pile tops (always sorted ↑). tailIdx[] remembers which original index owns each top. pred[] records the chain for reconstruction.',
-    { i: -1, val: null, lo: -1, hi: -1, mid: -1, pileIdx: -1, predIdx: -1 });
+    'Patience Sort starts. tails[] = pile tops (always sorted ↑). tailIdx[] = original index of each top. pred[] = predecessor chain for reconstruction.',
+    { i:-1, val:null, lo:-1, hi:-1, mid:-1, pileIdx:-1, predIdx:-1, phase:'start' });
 
   for (let i = 0; i < n; i++) {
     const val = arr[i];
+    snap('pick', {[i]:'i'}, 2,
+      `A[${i}] = ${val}. ${tails.length} pile(s) exist. Starting binary search for correct position…`,
+      { i, val, lo:0, hi:tails.length, mid:-1, pileIdx:-1, predIdx:-1, phase:'pick' });
 
-    snap('pick', { [i]: 'cur' }, 2,
-      `Processing A[${i}] = ${val}. ${tails.length} pile(s) so far with tops [${tails.join(', ')}]. Binary searching for the leftmost pile whose top ≥ ${val}...`,
-      { i, val, lo: 0, hi: tails.length, mid: -1, pileIdx: -1, predIdx: -1 });
-
-    // Binary search: leftmost pile top >= val
     let lo = 0, hi = tails.length;
+
     while (lo < hi) {
       cmp++; bs++;
       const mid = Math.floor((lo + hi) / 2);
-      snap('bsearch', { [i]: 'search' }, 5,
-        `Binary search: lo=${lo}, hi=${hi}, mid=${mid} → tails[${mid}] = ${tails[mid]}.`,
-        { i, val, lo, hi, mid, pileIdx: -1, predIdx: lo > 0 ? tailIdx[lo - 1] : -1 });
-
+      snap('bs', {[i]:'search'}, 5,
+        `Binary search: lo=${lo}, hi=${hi} → mid=${mid}, tails[${mid}]=${tails[mid]}.`,
+        { i, val, lo, hi, mid, pileIdx:-1, predIdx:-1, phase:'bs' });
       if (tails[mid] < val) {
         lo = mid + 1;
-        snap('bsr', { [i]: 'search' }, 7,
-          `tails[${mid}] = ${tails[mid]} < ${val}: too small → go right. lo = ${lo}.`,
-          { i, val, lo, hi, mid, pileIdx: -1, predIdx: -1 });
+        snap('bsR', {[i]:'search'}, 7,
+          `tails[${mid}]=${tails[mid]} < ${val}: go right. lo = ${lo}.`,
+          { i, val, lo, hi, mid, pileIdx:-1, predIdx:-1, phase:'bs' });
       } else {
         hi = mid;
-        snap('bsl', { [i]: 'search' }, 8,
-          `tails[${mid}] = ${tails[mid]} ≥ ${val}: could work, try left for smaller pile index. hi = ${hi}.`,
-          { i, val, lo, hi, mid, pileIdx: -1, predIdx: -1 });
+        snap('bsL', {[i]:'search'}, 8,
+          `tails[${mid}]=${tails[mid]} ≥ ${val}: go left. hi = ${hi}.`,
+          { i, val, lo, hi, mid, pileIdx:-1, predIdx:-1, phase:'bs' });
       }
     }
 
-    // CRITICAL: snapshot predecessor BEFORE modifying tailIdx[lo]
+    // CRITICAL: record predecessor BEFORE overwriting tailIdx[lo]
     const predIdx = lo > 0 ? tailIdx[lo - 1] : -1;
     if (lo > 0) {
       pred[i] = predIdx;
-      snap('pred', { [i]: 'search', [predIdx]: 'cmp' }, 10,
-        `Predecessor recorded: A[${i}]=${val} will follow A[${predIdx}]=${arr[predIdx]} (top of pile ${lo-1}). We snapshot this NOW before pile ${lo} gets overwritten.`,
-        { i, val, lo, hi: lo, mid: -1, pileIdx: -1, predIdx });
+      snap('pred', {[i]:'search', [predIdx]:'j'}, 10,
+        `Predecessor recorded: A[${i}]=${val} will follow A[${predIdx}]=${arr[predIdx]} (top of pile ${lo-1}). Snapshotting NOW before pile ${lo} changes.`,
+        { i, val, lo, hi:lo, mid:-1, pileIdx:-1, predIdx, phase:'pred' });
     }
 
     if (lo === tails.length) {
-      // New pile
-      tails.push(val);
-      tailIdx.push(i);
-      fullPiles.push([{ val, idx: i }]);
-      snap('newpile', { [i]: 'placed' }, 12,
-        `A[${i}]=${val} > all pile tops → NEW PILE ${lo} created! LIS length is now ${tails.length}. Pile tops: [${tails.join(', ')}].`,
-        { i, val, lo, hi: lo, mid: -1, pileIdx: lo, predIdx });
+      tails.push(val); tailIdx.push(i); piles.push([{val, idx:i}]);
+      snap('new', {[i]:'placed'}, 12,
+        `New pile ${lo} created with value ${val}. LIS length is now ${tails.length}!`,
+        { i, val, lo, hi:lo, mid:-1, pileIdx:lo, predIdx, phase:'place' });
     } else {
-      // Replace existing pile top
-      const old = tails[lo];
-      const oldIdx = tailIdx[lo];
-      tails[lo] = val;
-      tailIdx[lo] = i;
-      fullPiles[lo].push({ val, idx: i });
-      snap('place', { [i]: 'placed' }, 14,
-        `Placed A[${i}]=${val} on pile ${lo}, replacing top ${old} (from index ${oldIdx}). Smaller top = more options for future elements. Pile tops: [${tails.join(', ')}].`,
-        { i, val, lo, hi: lo + 1, mid: -1, pileIdx: lo, predIdx });
+      const oldVal = tails[lo];
+      tails[lo] = val; tailIdx[lo] = i; piles[lo].push({val, idx:i});
+      snap('place', {[i]:'placed'}, 14,
+        `A[${i}]=${val} placed on pile ${lo} (replaced top ${oldVal}). Pile tops: [${tails.join(', ')}].`,
+        { i, val, lo, hi:lo+1, mid:-1, pileIdx:lo, predIdx, phase:'place' });
     }
   }
 
-  // Reconstruct the actual LIS via predecessor chain
+  // Reconstruct LIS
   const lisLen = tails.length;
-  const lisPath = [];
-  let cur = tailIdx[lisLen - 1];
-  while (cur !== -1) {
-    lisPath.unshift(cur);
-    cur = pred[cur];
-  }
-  const lisValues = lisPath.map(idx => arr[idx]);
-  const hlDone = {};
-  lisPath.forEach(idx => { hlDone[idx] = 'lis'; });
+  const lisPath = []; let c = tailIdx[lisLen-1];
+  while (c !== -1) { lisPath.unshift(c); c = pred[c]; }
+  const lisVals = lisPath.map(k => arr[k]);
+  const hlDone = {}; lisPath.forEach(k => { hlDone[k] = 'lis'; });
 
   snap('done', hlDone, 16,
-    `✅ Done! LIS length = ${lisLen} (= number of piles). Actual LIS = [${lisValues.join(', ')}] at indices [${lisPath.join(', ')}]. Traced via pred[] chain from index ${tailIdx[lisLen-1]}.`,
-    { i: -1, val: null, lo: -1, hi: -1, mid: -1, pileIdx: -1, predIdx: -1,
-      lisLen, lisPath, lisValues });
-
+    `✅ LIS length = ${lisLen}. Actual LIS = [${lisVals.join(', ')}] at indices [${lisPath.join(', ')}]. Traced via pred[] from index ${tailIdx[lisLen-1]}.`,
+    { i:-1, val:null, lo:-1, hi:-1, mid:-1, pileIdx:-1, predIdx:-1, phase:'done',
+      lisLen, lisPath, lisVals });
   return steps;
 }
 
-/* ── Render: Array Bars ───────────────────────────────────── */
-function drawBars(step, targetSVG) {
-  const arr = S.arr;
-  const svg = targetSVG || $('arraySVG');
-  const n = arr.length;
-  if (!n) { svg.innerHTML = ''; return; }
-
-  const W = 700, H = 200, BOT = 32, TOP = 22, SIDE = 18;
-  const avail = W - 2 * SIDE;
-  const bw = Math.min(62, Math.floor(avail / n) - 5);
-  const gap = (avail - n * bw) / (n + 1);
-  const sx0 = SIDE + gap;
+/* ═══════════════ RENDER: ARRAY BARS ═══════════════ */
+function renderBars(step, svgEl) {
+  const arr = S.arr; const n = arr.length;
+  const svg = svgEl || $('arraySVG');
+  const W=700, H=190, BOT=32, TOP=22, SIDE=16;
+  const avail = W - 2*SIDE;
+  const bw = Math.min(64, Math.floor(avail/n) - 5);
+  const gap = (avail - n*bw) / (n+1);
+  const x0 = SIDE + gap;
   const maxH = H - TOP - BOT;
   const maxV = Math.max(...arr, 1);
 
-  const HL = {
-    cur:'#ff9f43', cmp:'#ffd166', upd:'#64f0c8', lis:'#64f0c8',
-    skip:'#3a3f5c', search:'#c77dff', placed:'#64f0c8', normal:'#6aa9ff'
-  };
-  const hl = (step && step.highlights) || {};
+  const COL = { i:'#ff9f43', j:'#ffd166', upd:'#64f0c8', lis:'#64f0c8',
+                skip:'#2a2d42', search:'#c77dff', placed:'#64f0c8', normal:'#6aa9ff' };
+  const hl = (step && step.hl) || {};
 
-  let html = '';
-
-  // Subtle horizontal grid lines
-  for (let g = 1; g <= 3; g++) {
-    const gy = TOP + (maxH / 4) * g;
-    html += `<line x1="${SIDE}" y1="${gy}" x2="${W - SIDE}" y2="${gy}" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>`;
+  let h = '';
+  // Light grid
+  for (let g=1; g<=3; g++) {
+    const gy = TOP + (maxH/4)*g;
+    h += `<line x1="${SIDE}" y1="${gy}" x2="${W-SIDE}" y2="${gy}" stroke="rgba(255,255,255,.03)" stroke-width="1"/>`;
   }
 
-  for (let k = 0; k < n; k++) {
-    const x = sx0 + k * (bw + gap);
-    const bh = Math.max(6, Math.round((arr[k] / maxV) * maxH));
+  for (let k=0; k<n; k++) {
+    const x = x0 + k*(bw+gap);
+    const bh = Math.max(6, Math.round((arr[k]/maxV)*maxH));
     const by = H - BOT - bh;
     const state = hl[k] || 'normal';
-    const col = HL[state] || HL.normal;
+    const col = COL[state] || COL.normal;
     const isSkip = state === 'skip';
-    const op = isSkip ? 0.25 : 1;
+    const op = isSkip ? 0.22 : 1;
 
-    // Bar shadow glow
-    if (!isSkip) {
-      html += `<rect x="${x + 2}" y="${by + 4}" width="${bw}" height="${bh}" rx="5" fill="${col}" opacity="0.06"/>`;
-    }
-    // Bar body
-    html += `<rect x="${x}" y="${by}" width="${bw}" height="${bh}" rx="5"
-      fill="${col}22" stroke="${col}" stroke-width="${state !== 'normal' ? 2 : 1.5}"
-      opacity="${op}" style="transition:y .2s,height .2s,fill .15s,stroke .15s;"/>`;
+    // Bar
+    h += `<rect x="${x}" y="${by}" width="${bw}" height="${bh}" rx="4"
+      fill="${col}1e" stroke="${col}" stroke-width="${state!=='normal'?2:1.2}"
+      opacity="${op}" style="transition:all .2s;"/>`;
 
-    // Gradient highlight on top of bar
-    if (!isSkip) {
-      html += `<rect x="${x + 2}" y="${by}" width="${bw - 4}" height="6" rx="3" fill="${col}" opacity="0.18"/>`;
-    }
-
-    // Value label above bar
-    const fs = bw < 32 ? 9 : 11;
-    html += `<text x="${x + bw/2}" y="${Math.max(by - 5, TOP - 2)}" text-anchor="middle"
+    // Value label
+    const fs = bw < 34 ? 9 : 11;
+    h += `<text x="${x+bw/2}" y="${Math.max(by-4,TOP-2)}" text-anchor="middle"
       fill="${col}" font-size="${fs}" font-weight="700" opacity="${op}">${arr[k]}</text>`;
 
-    // Index label below bar
-    html += `<text x="${x + bw/2}" y="${H - 12}" text-anchor="middle"
-      fill="rgba(183,192,255,.4)" font-size="9">${k}</text>`;
+    // Index label
+    h += `<text x="${x+bw/2}" y="${H-10}" text-anchor="middle"
+      fill="rgba(183,192,255,.35)" font-size="9">${k}</text>`;
 
-    // Pointer labels (i / j)
+    // Pointer arrows
     const ptrs = [];
     if (step) {
-      if (step.i === k)    ptrs.push({ lbl: 'i', c: '#ff9f43' });
-      if (step.j === k)    ptrs.push({ lbl: 'j', c: '#ffd166' });
-      if (step.predIdx === k) ptrs.push({ lbl: '←pred', c: '#ff5c7a' });
+      if (step.i     === k) ptrs.push({l:'i',    c:'#ff9f43'});
+      if (step.j     === k) ptrs.push({l:'j',    c:'#ffd166'});
+      if (step.predIdx===k) ptrs.push({l:'pred', c:'#ff5c7a'});
     }
     if (ptrs.length) {
-      html += `<text x="${x + bw/2}" y="${H - 2}" text-anchor="middle"
-        fill="${ptrs[0].c}" font-size="8" font-weight="700">${ptrs.map(p => p.lbl).join('/')}</text>`;
-      // Pointer arrow line
-      html += `<line x1="${x + bw/2}" y1="${H - BOT - 1}" x2="${x + bw/2}" y2="${H - BOT + 6}"
-        stroke="${ptrs[0].c}" stroke-width="1.5" opacity="0.6"/>`;
+      h += `<line x1="${x+bw/2}" y1="${H-BOT}" x2="${x+bw/2}" y2="${H-BOT+7}"
+        stroke="${ptrs[0].c}" stroke-width="1.5" opacity=".7"/>`;
+      h += `<text x="${x+bw/2}" y="${H-1}" text-anchor="middle"
+        fill="${ptrs[0].c}" font-size="8" font-weight="700">${ptrs.map(p=>p.l).join('/')}</text>`;
     }
   }
 
   svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
-  svg.innerHTML = html;
+  svg.innerHTML = h;
 }
 
-/* ── Render: DP Table ─────────────────────────────────────── */
-function drawDP(step, targetEl) {
-  const arr = S.arr;
-  const n = arr.length;
+/* ═══════════════ RENDER: DP TABLE ═══════════════ */
+function renderDP(step, tblEl) {
+  const arr = S.arr; const n = arr.length;
   const dp   = (step && step.dp)   || new Array(n).fill(0);
   const prev = (step && step.prev) || new Array(n).fill(-1);
-  const hl   = (step && step.highlights) || {};
-  const tbl  = targetEl || $('dpTable');
+  const hl   = (step && step.hl)   || {};
+  const tbl  = tblEl || $('dpTbl');
 
   const cls = k => {
     const s = hl[k] || 'normal';
-    if (s === 'cur')  return 'h-cur';
-    if (s === 'cmp')  return 'h-cmp';
-    if (s === 'upd')  return 'h-upd';
-    if (s === 'lis')  return 'h-lis';
-    if (s === 'skip') return 'h-skip';
+    if (s==='i')    return 'dc-i';
+    if (s==='j')    return 'dc-j';
+    if (s==='upd')  return 'dc-upd';
+    if (s==='lis')  return 'dc-lis';
+    if (s==='skip') return 'dc-skip';
     return '';
   };
 
   let h = '';
-  // Row: index
-  h += '<tr><th style="text-align:left;padding-left:10px;">idx</th>';
-  for (let k = 0; k < n; k++) h += `<td class="${cls(k)}" style="font-size:10px;color:rgba(183,192,255,.5);">${k}</td>`;
-  h += '</tr>';
-  // Row: A[i]
-  h += '<tr><th style="text-align:left;padding-left:10px;">A[i]</th>';
-  for (let k = 0; k < n; k++) h += `<td class="${cls(k)}" style="font-weight:600;">${arr[k]}</td>`;
-  h += '</tr>';
-  // Row: dp[i]
-  h += '<tr><th style="text-align:left;padding-left:10px;color:var(--c2);">dp[i]</th>';
-  for (let k = 0; k < n; k++) {
-    const v = dp[k];
-    h += `<td class="${cls(k)}" style="font-weight:700;font-size:13px;">${v > 0 ? v : '–'}</td>`;
-  }
-  h += '</tr>';
-  // Row: prev[i] (predecessor index)
-  h += '<tr><th style="text-align:left;padding-left:10px;color:var(--c6);font-size:10px;">prev[i]</th>';
-  for (let k = 0; k < n; k++) {
-    const p = prev[k];
-    h += `<td class="h-prev" style="font-size:10px;">${p >= 0 ? p : '–'}</td>`;
-  }
+  h += '<tr><th>idx</th>';
+  for (let k=0;k<n;k++) h+=`<td class="${cls(k)}" style="font-size:10px;opacity:.55;">${k}</td>`;
+  h += '</tr><tr><th>A[i]</th>';
+  for (let k=0;k<n;k++) h+=`<td class="${cls(k)}" style="font-weight:600;">${arr[k]}</td>`;
+  h += '</tr><tr><th style="color:var(--teal);">dp[i]</th>';
+  for (let k=0;k<n;k++) h+=`<td class="${cls(k)}" style="font-size:14px;font-weight:800;">${dp[k]>0?dp[k]:'–'}</td>`;
+  h += '</tr><tr><th style="color:var(--purple);font-size:10px;">prev[i]</th>';
+  for (let k=0;k<n;k++) h+=`<td class="dc-prev">${prev[k]>=0?prev[k]:'–'}</td>`;
   h += '</tr>';
   tbl.innerHTML = h;
 }
 
-/* ── Render: Patience Piles ───────────────────────────────── */
-function drawPiles(step, targetSVG) {
-  const svg = targetSVG || $('pilesSVG');
-  if (!step) {
-    svg.setAttribute('viewBox', '0 0 700 240');
-    svg.innerHTML = '<text x="350" y="120" text-anchor="middle" fill="rgba(183,192,255,.4)" font-size="13">Build steps to see piles appear here</text>';
-    return;
-  }
-
-  const pilesFull = step.full || [];
-  const np = pilesFull.length;
-  const W = 700, H = 240, BASE = 190;
-  const CW = 52, CH = 24, CGAP = 3, PGAP = 18;
+/* ═══════════════ RENDER: PATIENCE PILES ═══════════════ */
+function renderPiles(step, svgEl) {
+  const svg = svgEl || $('pilesSVG');
+  const W=700, H=230, BASE=185;
+  const CW=54, CH=24, CGAP=3, PGAP=16;
 
   svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
 
-  if (np === 0) {
-    svg.innerHTML = '<text x="350" y="120" text-anchor="middle" fill="rgba(183,192,255,.4)" font-size="13">No piles yet — processing first element…</text>';
+  if (!step || !step.full) {
+    svg.innerHTML = `<text x="350" y="115" text-anchor="middle" fill="rgba(183,192,255,.35)" font-size="13">Build steps to see piles appear here</text>`;
     return;
   }
 
-  const totalPileW = np * CW + (np - 1) * PGAP;
-  const p0 = (W - totalPileW) / 2;
-
-  const isBs    = ['bsearch','bsr','bsl'].includes(step.type);
-  const bsLo    = step.lo  !== undefined ? step.lo  : -1;
-  const bsHi    = step.hi  !== undefined ? step.hi  : -1;
-  const bsMid   = step.mid !== undefined ? step.mid : -1;
-  const placed  = step.pileIdx !== undefined ? step.pileIdx : -1;
-  const predIdx = step.predIdx !== undefined ? step.predIdx : -1;
-
-  let html = '';
-
-  // Binary search range bracket
-  if (isBs && bsLo >= 0 && bsHi > bsLo && bsHi <= np) {
-    const rx1 = p0 + bsLo * (CW + PGAP) - 8;
-    const rx2 = p0 + (bsHi - 1) * (CW + PGAP) + CW + 8;
-    html += `<rect x="${rx1}" y="14" width="${rx2 - rx1}" height="${H - 54}" rx="10"
-      fill="rgba(199,125,255,0.05)" stroke="rgba(199,125,255,.4)" stroke-width="1.5" stroke-dasharray="6 3"/>`;
-    html += `<text x="${(rx1 + rx2)/2}" y="26" text-anchor="middle"
-      fill="rgba(199,125,255,.8)" font-size="10" font-weight="700">binary search [${bsLo}..${bsHi-1}]</text>`;
+  const full = step.full;
+  const np = full.length;
+  if (np === 0) {
+    svg.innerHTML = `<text x="350" y="115" text-anchor="middle" fill="rgba(183,192,255,.35)" font-size="13">No piles yet…</text>`;
+    return;
   }
 
-  // Draw each pile column
-  for (let p = 0; p < np; p++) {
-    const pile = pilesFull[p];  // array of {val, idx}
-    const px = p0 + p * (CW + PGAP);
+  const phase    = step.phase || '';
+  const bsLo     = step.lo  !== undefined ? step.lo  : -1;
+  const bsHi     = step.hi  !== undefined ? step.hi  : -1;
+  const bsMid    = step.mid !== undefined ? step.mid : -1;
+  const placed   = step.pileIdx !== undefined ? step.pileIdx : -1;
+  const predIdx  = step.predIdx !== undefined ? step.predIdx : -1;
+  const isBsStep = ['bs','bsR','bsL'].includes(step.type);
+  const isPlace  = ['new','place'].includes(step.type);
+  const isPred   = step.type === 'pred';
+  const isDone   = step.type === 'done';
 
-    // Pile column background track
-    html += `<rect x="${px - 2}" y="${BASE - Math.min(pile.length, 7) * (CH + CGAP) - 4}" width="${CW + 4}"
-      height="${Math.min(pile.length, 7) * (CH + CGAP) + 4}" rx="6"
-      fill="rgba(255,255,255,0.02)" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>`;
+  const p0 = (W - (np*CW + (np-1)*PGAP)) / 2;
+  let h = '';
 
-    let topCol = 'var(--c1)';
-    const isPlacedPile = (step.type === 'newpile' || step.type === 'place') && p === placed;
-    if (isPlacedPile) topCol = 'var(--c2)';
-    else if (isBs && p === bsMid) topCol = 'var(--c3)';
-    else if (isBs && p >= bsLo && p < bsHi) topCol = 'var(--c6)';
-    else if (step.type === 'done') topCol = 'var(--c2)';
+  // ── Binary search range (only during active search) ──
+  if (isBsStep && bsLo >= 0 && bsHi > bsLo && bsHi <= np) {
+    const rx1 = p0 + bsLo*(CW+PGAP) - 8;
+    const rx2 = p0 + (bsHi-1)*(CW+PGAP) + CW + 8;
+    h += `<rect x="${rx1}" y="12" width="${rx2-rx1}" height="${H-52}" rx="10"
+      fill="rgba(199,125,255,.04)" stroke="rgba(199,125,255,.4)" stroke-width="1.5" stroke-dasharray="6 3"/>`;
+    h += `<text x="${(rx1+rx2)/2}" y="24" text-anchor="middle"
+      fill="rgba(199,125,255,.75)" font-size="9.5" font-weight="700">search [${bsLo}…${bsHi-1}]</text>`;
+  }
 
-    // Draw cards bottom-to-top (show up to last 6)
+  // ── Draw piles ──
+  for (let p=0; p<np; p++) {
+    const pile = full[p];
+    const px = p0 + p*(CW+PGAP);
+
+    // Pick color for this pile's top
+    let topCol = isDone ? 'var(--teal)' : 'var(--blue)';
+    if (isBsStep) {
+      if (p === bsMid) topCol = 'var(--yellow)';
+      else if (p >= bsLo && p < bsHi) topCol = 'var(--purple)';
+    }
+    if (isPlace && p === placed) topCol = 'var(--teal)';
+
+    // Cards (show up to 6)
     const startC = Math.max(0, pile.length - 6);
-    for (let c = startC; c < pile.length; c++) {
+    for (let c=startC; c<pile.length; c++) {
       const isTop = c === pile.length - 1;
-      const stackPos = c - startC;
-      const cy = BASE - (stackPos + 1) * (CH + CGAP);
+      const slot = c - startC;
+      const cy = BASE - (slot+1)*(CH+CGAP);
       const card = pile[c];
-      const cardCol = isTop ? topCol : 'rgba(106,169,255,0.5)';
-      const fillOp = isTop ? '28' : '10';
+      const cc = isTop ? topCol : 'rgba(106,169,255,.35)';
 
-      html += `<rect x="${px}" y="${cy}" width="${CW}" height="${CH}" rx="6"
-        fill="${cardCol}${fillOp}" stroke="${cardCol}" stroke-width="${isTop ? 2 : 1}"
-        style="transition:fill .15s,stroke .15s;"/>`;
-
-      // Show index badge on top card
+      h += `<rect x="${px}" y="${cy}" width="${CW}" height="${CH}" rx="6"
+        fill="${cc}22" stroke="${cc}" stroke-width="${isTop?2:1}"/>`;
+      h += `<text x="${px+CW/2}" y="${cy+15}" text-anchor="middle"
+        fill="${isTop?cc:'rgba(183,192,255,.3)'}"
+        font-size="${isTop?13:10}" font-weight="${isTop?700:400}">${card.val}</text>`;
       if (isTop) {
-        html += `<text x="${px + CW/2}" y="${cy + 15}" text-anchor="middle"
-          fill="${cardCol}" font-size="13" font-weight="700">${card.val}</text>`;
-        html += `<text x="${px + CW - 4}" y="${cy + 8}" text-anchor="end"
-          fill="${cardCol}" font-size="7" opacity=".6">[${card.idx}]</text>`;
-      } else {
-        html += `<text x="${px + CW/2}" y="${cy + 15}" text-anchor="middle"
-          fill="rgba(183,192,255,.35)" font-size="10">${card.val}</text>`;
+        h += `<text x="${px+CW-3}" y="${cy+8}" text-anchor="end"
+          fill="${cc}" font-size="7" opacity=".55">[${card.idx}]</text>`;
       }
     }
 
-    // Mid marker triangle
-    if (isBs && p === bsMid) {
-      const topY = BASE - (Math.min(pile.length, 6)) * (CH + CGAP) - 14;
-      html += `<polygon points="${px + CW/2},${topY + 10} ${px + CW/2 - 7},${topY} ${px + CW/2 + 7},${topY}"
-        fill="var(--c3)" opacity="0.9"/>`;
-      html += `<text x="${px + CW/2}" y="${topY - 2}" text-anchor="middle"
-        fill="var(--c3)" font-size="9" font-weight="700">mid</text>`;
+    // Mid marker (only during search)
+    if (isBsStep && p === bsMid) {
+      const mStackH = Math.min(pile.length, 6);
+      const topY = BASE - mStackH*(CH+CGAP) - 8;
+      h += `<polygon points="${px+CW/2},${topY+10} ${px+CW/2-6},${topY} ${px+CW/2+6},${topY}"
+        fill="var(--yellow)"/>`;
+      h += `<text x="${px+CW/2}" y="${topY-2}" text-anchor="middle"
+        fill="var(--yellow)" font-size="9" font-weight="700">mid</text>`;
     }
 
-    // Placed here checkmark
-    if (isPlacedPile) {
-      const topY = BASE - (Math.min(pile.length, 6)) * (CH + CGAP) - 14;
-      html += `<text x="${px + CW/2}" y="${topY}" text-anchor="middle"
-        fill="var(--c2)" font-size="13">✓</text>`;
+    // Placed checkmark
+    if (isPlace && p === placed) {
+      const mStackH = Math.min(pile.length, 6);
+      const topY = BASE - mStackH*(CH+CGAP) - 8;
+      h += `<text x="${px+CW/2}" y="${topY}" text-anchor="middle" fill="var(--teal)" font-size="13">✓</text>`;
     }
 
-    // Pile label at bottom
-    html += `<text x="${px + CW/2}" y="${BASE + 16}" text-anchor="middle"
-      fill="${topCol}" font-size="10" font-weight="600">Pile ${p}</text>`;
-    html += `<text x="${px + CW/2}" y="${BASE + 26}" text-anchor="middle"
-      fill="rgba(183,192,255,.3)" font-size="8">(len ${pile.length})</text>`;
+    // Pile label
+    h += `<text x="${px+CW/2}" y="${BASE+14}" text-anchor="middle"
+      fill="${topCol}" font-size="9.5" font-weight="600">Pile ${p}</text>`;
   }
 
-  // Current element badge (top-left)
+  // ── Predecessor annotation (only after pred step) ──
+  if (isPred && predIdx >= 0 && bsLo > 0 && bsLo-1 < np) {
+    const pp = bsLo - 1;
+    const ppx = p0 + pp*(CW+PGAP) + CW/2;
+    const mSH = Math.min(full[pp].length, 6);
+    const topY = BASE - mSH*(CH+CGAP);
+    h += `<line x1="${ppx}" y1="${topY-2}" x2="${ppx}" y2="${topY-16}"
+      stroke="var(--red)" stroke-width="1.5" stroke-dasharray="3 2" opacity=".8"/>`;
+    h += `<text x="${ppx}" y="${topY-18}" text-anchor="middle"
+      fill="var(--red)" font-size="9" font-weight="700">← pred</text>`;
+  }
+
+  // ── Current element badge ──
   if (step.i !== undefined && step.i >= 0 && step.val != null) {
-    const ePlaced = step.type === 'newpile' || step.type === 'place';
-    const eCol = ePlaced ? 'var(--c2)' : step.type === 'pred' ? 'var(--c5)' : 'var(--c6)';
-    html += `<rect x="10" y="8" width="${CW + 24}" height="26" rx="8"
-      fill="${eCol}18" stroke="${eCol}" stroke-width="1.3"/>`;
-    html += `<text x="${10 + (CW+24)/2}" y="25" text-anchor="middle"
-      fill="${eCol}" font-size="12" font-weight="700">A[${step.i}]=${step.val}</text>`;
+    const eCol = isPlace ? 'var(--teal)' : isBsStep ? 'var(--purple)' : isPred ? 'var(--red)' : 'var(--blue)';
+    h += `<rect x="8" y="8" width="${CW+20}" height="24" rx="8"
+      fill="${eCol}18" stroke="${eCol}" stroke-width="1.2"/>`;
+    h += `<text x="${8+(CW+20)/2}" y="24" text-anchor="middle"
+      fill="${eCol}" font-size="11.5" font-weight="700">A[${step.i}]=${step.val}</text>`;
   }
 
-  // Predecessor arrow: draw from predIdx bar zone down to pile lo-1
-  if (step.type === 'pred' && predIdx >= 0 && bsLo > 0) {
-    const pPile = bsLo - 1;
-    const pileX = p0 + pPile * (CW + PGAP) + CW / 2;
-    const pTop  = BASE - Math.min(pilesFull[pPile].length, 6) * (CH + CGAP);
-    html += `<line x1="${pileX}" y1="${pTop - 2}" x2="${pileX}" y2="${pTop - 18}"
-      stroke="var(--c5)" stroke-width="1.5" stroke-dasharray="4 2" opacity=".7"/>`;
-    html += `<text x="${pileX}" y="${pTop - 20}" text-anchor="middle"
-      fill="var(--c5)" font-size="9">pred</text>`;
+  // ── Done: LIS annotation ──
+  if (isDone && step.lisVals) {
+    h += `<rect x="${W/2-130}" y="${H-26}" width="260" height="20" rx="8"
+      fill="rgba(100,240,200,.1)" stroke="rgba(100,240,200,.4)" stroke-width="1"/>`;
+    h += `<text x="${W/2}" y="${H-12}" text-anchor="middle"
+      fill="var(--teal)" font-size="11" font-weight="700">
+      LIS = [${step.lisVals.join(', ')}]  at indices [${step.lisPath.join(', ')}]</text>`;
   }
 
-  // Done: draw LIS path label
-  if (step.type === 'done' && step.lisValues) {
-    html += `<rect x="${W/2 - 120}" y="${H - 28}" width="240" height="22" rx="8"
-      fill="rgba(100,240,200,0.12)" stroke="rgba(100,240,200,0.4)" stroke-width="1"/>`;
-    html += `<text x="${W/2}" y="${H - 13}" text-anchor="middle"
-      fill="var(--c2)" font-size="11" font-weight="700">
-      LIS = [${step.lisValues.join(', ')}]  at indices [${step.lisPath.join(', ')}]</text>`;
-  }
-
-  svg.innerHTML = html;
+  svg.innerHTML = h;
 }
 
-/* ── Render: Pseudocode ───────────────────────────────────── */
-function drawPseudo(activeLine) {
+/* ═══════════════ RENDER: PSEUDOCODE ═══════════════ */
+function renderPseudo(activePl) {
   const lines = PSEUDO[S.algo];
-  let html = '';
-  for (let i = 0; i < lines.length; i++) {
-    const act = i === activeLine;
+  const tipEl = $('pseudoTip');
+  let h = '';
+
+  for (let i=0; i<lines.length; i++) {
+    const act = i === activePl;
     const code = lines[i].c
-      .replace(/\b(function|for|if|else|while|return|to)\b/g, '<span class="kw">$1</span>')
+      .replace(/\b(function|for|if|else|while|return|to|else:)\b/g, '<span class="kw">$1</span>')
       .replace(/\b(LIS_DP|LIS_PATIENCE)\b/g, '<span class="fn">$1</span>')
       .replace(/\b(dp|tails|tailIdx|pred|lo|hi|mid|A)\b/g, '<span class="vr">$1</span>');
-    // data-tip stored on each line, read by mouseover handler
-    html += `<div class="pline${act ? ' active' : ''}" id="pl${i}" data-tip="${lines[i].t.replace(/"/g, '&quot;')}">
-      <span class="pnum">${i+1}</span>
-      <span class="pcode">${code}</span>
+    h += `<div class="pline${act?' hl':''}" id="pl${i}" data-tip="${lines[i].t.replace(/"/g,'&quot;')}">
+      <span class="pnum">${i+1}</span><span class="pcode">${code}</span>
     </div>`;
   }
-  $('pseudoWrap').innerHTML = html;
 
-  // Wire up hover events to update the tip bar below
-  const tipBar = $('pseudoTipBar');
-  $('pseudoWrap').querySelectorAll('.pline').forEach(el => {
+  const scroll = $('pseudoScroll');
+  scroll.innerHTML = h;
+
+  // Hover events → tip bar
+  scroll.querySelectorAll('.pline').forEach(el => {
     el.addEventListener('mouseenter', () => {
-      tipBar.textContent = el.dataset.tip;
-      tipBar.classList.add('lit');
-      el.classList.add('hovered');
+      tipEl.textContent = el.dataset.tip;
+      tipEl.classList.add('lit');
     });
     el.addEventListener('mouseleave', () => {
-      // Show active line tip if there is one, otherwise default
-      const active = $('pseudoWrap').querySelector('.pline.active');
-      tipBar.textContent = active ? active.dataset.tip : 'Hover any line above to see what it does.';
-      tipBar.classList.toggle('lit', !!active);
-      el.classList.remove('hovered');
+      const ahl = scroll.querySelector('.pline.hl');
+      tipEl.textContent = ahl ? ahl.dataset.tip : 'Hover any line above to see what it does.';
+      tipEl.classList.toggle('lit', !!ahl);
     });
   });
 
-  // Scroll active line into view and update tip bar
-  if (activeLine >= 0) {
-    const el = $('pl' + activeLine);
-    if (el) {
-      el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-      tipBar.textContent = lines[activeLine].t;
-      tipBar.classList.add('lit');
-    }
+  // Scroll active line and update tip
+  if (activePl >= 0) {
+    const el = $('pl'+activePl);
+    if (el) { el.scrollIntoView({block:'nearest',behavior:'smooth'}); tipEl.textContent = lines[activePl].t; tipEl.classList.add('lit'); }
   } else {
-    tipBar.textContent = 'Hover any line above to see what it does.';
-    tipBar.classList.remove('lit');
+    tipEl.textContent = 'Hover any line above to see what it does.';
+    tipEl.classList.remove('lit');
   }
 }
 
-/* ── Apply Step ───────────────────────────────────────────── */
+/* ═══════════════ RENDER: LEGEND ═══════════════ */
+function renderLegend() {
+  if (S.algo === 'dp') {
+    $('arrayLegend').innerHTML = `
+      <div class="leg"><div class="ldot" style="background:var(--blue);"></div>Normal</div>
+      <div class="leg"><div class="ldot" style="background:var(--orange);"></div>Active (i)</div>
+      <div class="leg"><div class="ldot" style="background:var(--yellow);"></div>Comparing (j)</div>
+      <div class="leg"><div class="ldot" style="background:var(--teal);"></div>Updated / LIS</div>
+      <div class="leg"><div class="ldot" style="background:rgba(255,255,255,.15);"></div>Skipped</div>`;
+  } else {
+    $('arrayLegend').innerHTML = `
+      <div class="leg"><div class="ldot" style="background:var(--blue);"></div>Normal</div>
+      <div class="leg"><div class="ldot" style="background:var(--purple);"></div>In search range</div>
+      <div class="leg"><div class="ldot" style="background:var(--red);"></div>Predecessor (pred)</div>
+      <div class="leg"><div class="ldot" style="background:var(--teal);"></div>Placed / LIS</div>`;
+  }
+}
+
+/* ═══════════════ APPLY STEP ═══════════════ */
 function applyStep(idx) {
   if (idx < 0 || idx >= S.steps.length) return;
   S.cur = idx;
-  const step = S.steps[idx];
+  const st = S.steps[idx];
 
-  drawBars(step);
-  if (S.algo === 'dp') drawDP(step);
-  else drawPiles(step);
-  drawPseudo(step.pseudoLine >= 0 ? step.pseudoLine : -1);
+  renderBars(st);
+  if (S.algo === 'dp') renderDP(st);
+  else renderPiles(st);
+  renderPseudo(st.pl >= 0 ? st.pl : -1);
 
   // Explanation
   const ex = $('stepExplain');
-  ex.innerHTML = step.desc || '';
-  ex.className = 'explain';
-  if (step.type === 'update' || step.type === 'newpile') ex.classList.add('ev-update');
-  else if (['compare','bsearch','bsr','bsl','pred'].includes(step.type)) ex.classList.add('ev-compare');
-  else if (step.type === 'done') ex.classList.add('ev-done');
+  ex.innerHTML = st.desc || '';
+  ex.className = 'step-explain';
+  if (['upd','new'].includes(st.type))             ex.classList.add('ev-update');
+  else if (['cmp','bs','bsR','bsL'].includes(st.type)) ex.classList.add('ev-compare');
+  else if (st.type==='pred')                        ex.classList.add('ev-bs');
+  else if (st.type==='done')                        ex.classList.add('ev-done');
 
   // Stats
-  const st = step.stats || {};
-  $('statCmp').textContent = st.cmp || 0;
-  $('statUpd').textContent = S.algo === 'dp' ? (st.upd || 0) : (step.tops ? step.tops.length : 0);
-  $('statBS').textContent  = st.bs || 0;
-  $('statTot').textContent = st.tot || 0;
-  $('stepCounter').textContent = `${idx + 1} / ${S.steps.length}`;
+  const s = st.stats || {};
+  $('stCmp').textContent = s.cmp || 0;
+  $('stUpd').textContent = S.algo==='dp' ? (s.upd||0) : (st.tops ? st.tops.length : 0);
+  $('stBS').textContent  = s.bs  || 0;
+  $('stTot').textContent = s.tot || 0;
+  $('stepCounter').textContent = `${idx+1} / ${S.steps.length}`;
 
-  if (step.type === 'done') {
-    $('resultPill').style.display = 'flex';
-    const len = step.lisLen || (step.tops ? step.tops.length : '?');
-    const seq = step.lisValues ? ` → [${step.lisValues.join(', ')}]` : (step.lisPath ? ` → [${step.lisPath.map(i=>S.arr[i]).join(', ')}]` : '');
-    $('statLIS').textContent = len + seq;
+  // Done state
+  if (st.type === 'done') {
+    showFinalResult(st);
     setStatus('done');
   }
 
-  // History — add key steps
-  const isKey = ['update','newpile','place','done','outer','pred'].includes(step.type);
-  if (isKey || idx === 0) addHistory(step, idx);
+  // History
+  const key = ['upd','new','place','done','outer','pred'].includes(st.type);
+  if (key || idx === 0) addHistory(st, idx);
 }
 
-/* ── History ─────────────────────────────────────────────── */
-function addHistory(step, idx) {
-  const tbody = $('histBody');
-  // Deactivate all
-  tbody.querySelectorAll('tr').forEach(r => r.classList.remove('hrow-active'));
-  // Limit to 30
-  if (tbody.children.length >= 30) tbody.removeChild(tbody.firstChild);
+/* ═══════════════ FINAL RESULT ═══════════════ */
+function showFinalResult(st) {
+  const len  = st.lisLen || (st.tops ? st.tops.length : '?');
+  const seq  = st.lisVals || (st.lisPath ? st.lisPath.map(k=>S.arr[k]) : []);
+  const idxs = st.lisPath || [];
+
+  $('finalResult').style.display = 'block';
+  $('frLen').textContent  = len;
+  $('frSeq').textContent  = '[' + seq.join(', ') + ']';
+  $('frIdx').textContent  = 'at indices: [' + idxs.join(', ') + ']';
+
+  // Also update pill
+  const pill = $('resultPill');
+  pill.style.display = 'flex';
+  $('resLen').textContent = len;
+  $('resSeq').textContent = '→ [' + seq.join(', ') + ']';
+  $('resIdx').textContent = 'indices: [' + idxs.join(', ') + ']';
+}
+
+/* ═══════════════ HISTORY ═══════════════ */
+const HIST_ICONS = {
+  start:'🚀', init:'📋', outer:'🔄', pick:'🔄',
+  cmp:'🔍', upd:'✅', skip:'⏭', noimpr:'➡',
+  bs:'🔎', bsR:'→', bsL:'←', pred:'🔗',
+  new:'🆕', place:'📥', done:'🏆'
+};
+
+function addHistory(st, idx) {
+  const tbody = $('histRows');
+  tbody.querySelectorAll('tr').forEach(r => r.classList.remove('h-cur'));
+  if (tbody.children.length >= 35) tbody.removeChild(tbody.firstChild);
 
   const stateStr = S.algo === 'dp'
-    ? '[' + (step.dp || []).join(',') + ']'
-    : '[' + (step.tops || []).join(',') + ']';
+    ? (st.dp || []).join(',')
+    : (st.tops || []).join(',');
+  const desc = (st.desc||'').substring(0,55) + ((st.desc||'').length>55?'…':'');
+  const icon = HIST_ICONS[st.type] || '•';
 
   const tr = document.createElement('tr');
-  tr.className = 'hrow-active';
+  tr.className = 'h-cur';
   tr.dataset.step = idx;
-  const desc = (step.desc || '').substring(0, 60) + ((step.desc || '').length > 60 ? '…' : '');
-  tr.innerHTML = `<td style="color:var(--muted);">${idx+1}</td><td title="${step.desc}">${desc}</td><td class="harr">${stateStr}</td>`;
+  tr.innerHTML = `
+    <td style="color:var(--muted);font-size:10px;">${idx+1}</td>
+    <td class="hist-icon">${icon}</td>
+    <td title="${st.desc}">${desc}</td>
+    <td class="hist-arr">[${stateStr}]</td>`;
   tr.addEventListener('click', () => {
     stopAnim();
     applyStep(parseInt(tr.dataset.step));
-    setStatus('paused');
+    if (S.status !== 'done') setStatus('paused');
   });
   tbody.appendChild(tr);
-  tr.scrollIntoView({ block: 'nearest' });
-
-  S.histRows++;
-  $('histCount').textContent = `(${tbody.children.length} rows)`;
+  tr.scrollIntoView({block:'nearest'});
+  $('histCount').textContent = `(${tbody.children.length})`;
 }
 
-/* ── Status ───────────────────────────────────────────────── */
-const STATUS_LABELS = { idle:'Idle', ready:'Ready', playing:'Playing', paused:'Paused', done:'Done' };
+/* ═══════════════ STATUS / CONTROLS ═══════════════ */
+const STATUS = {
+  idle:   { text:'Idle — click Build Steps',   dot:'#444' },
+  ready:  { text:'Ready — press Play or Step', dot:'var(--blue)' },
+  playing:{ text:'Playing…',                   dot:'var(--teal)' },
+  paused: { text:'Paused',                     dot:'var(--yellow)' },
+  done:   { text:'Done ✅',                    dot:'var(--teal)' }
+};
+
 function setStatus(s) {
   S.status = s;
-  const w = $('statusWrap');
-  w.className = 'status-wrap s-' + s;
-  $('statusText').textContent = STATUS_LABELS[s] || s;
-  $('btnPlay').disabled  = s === 'idle' || s === 'done' || s === 'playing';
-  $('btnPause').disabled = s !== 'playing';
-  $('btnStep').disabled  = s === 'idle' || s === 'done';
-  $('btnReset').disabled = s === 'idle';
+  const info = STATUS[s] || STATUS.idle;
+  $('statusText').textContent   = info.text;
+  $('sDot').style.background    = info.dot;
+
+  const isIdle    = s==='idle';
+  const isReady   = s==='ready';
+  const isPlaying = s==='playing';
+  const isPaused  = s==='paused';
+  const isDone    = s==='done';
+
+  $('btnBuild').disabled = isPlaying;
+  $('btnPlay').disabled  = isIdle || isPlaying || isDone;
+  $('btnPause').disabled = !isPlaying;
+  $('btnStep').disabled  = isIdle || isPlaying || isDone;
+  $('btnReset').disabled = isIdle;
+
+  // Glow reset button when done
+  if (isDone) $('btnReset').classList.add('btn-reset-glow');
+  else        $('btnReset').classList.remove('btn-reset-glow');
 }
 
-/* ── Animation ────────────────────────────────────────────── */
+/* ═══════════════ ANIMATION ═══════════════ */
 function getDelay() {
-  const mult = SPMAP[parseInt($('speedSlider').value) - 1] || 1;
-  return Math.max(60, Math.round(700 / mult));
+  const m = SPMAP[parseInt($('speedSlider').value)-1] || 1;
+  return Math.max(55, Math.round(650/m));
 }
 function stopAnim() {
-  S.playing = false;
+  S.status === 'playing' && setStatus('paused');
   if (S.timer) { clearInterval(S.timer); S.timer = null; }
 }
 function playAnim() {
-  if (S.playing) return;
-  if (S.cur >= S.steps.length - 1) return;
-  S.playing = true;
+  if (S.status==='playing') return;
+  if (S.cur >= S.steps.length-1) return;
   setStatus('playing');
   S.timer = setInterval(() => {
-    if (S.cur < S.steps.length - 1) {
-      applyStep(S.cur + 1);
-    } else {
-      stopAnim();
-      setStatus('done');
-    }
+    if (S.cur < S.steps.length-1) {
+      applyStep(S.cur+1);
+      if (S.cur >= S.steps.length-1) { stopAnim(); }
+    } else { stopAnim(); }
   }, getDelay());
 }
 
-/* ── Build Steps ──────────────────────────────────────────── */
-function buildSteps() {
-  stopAnim();
-  const raw = $('arrayInput').value;
-  const arr = raw.split(',').map(v => parseInt(v.trim())).filter(v => !isNaN(v));
-  if (arr.length < 2 || arr.length > 14) {
-    alert('Please enter between 2 and 14 numbers.');
-    return;
+/* ═══════════════ INPUT VALIDATION ═══════════════ */
+function validateInput() {
+  const raw = $('arrInput').value;
+  const parts = raw.split(',').map(v=>v.trim()).filter(v=>v!=='');
+  const nums = parts.map(v=>parseInt(v));
+  const errEl = $('inputErr');
+
+  if (parts.length < 2) {
+    errEl.textContent = '⚠ Need at least 2 numbers.'; errEl.classList.add('show');
+    $('arrInput').classList.add('err'); return null;
   }
-  S.arr = arr;
-  S.steps = S.algo === 'dp' ? genDP(arr) : genPatience(arr);
-  S.cur = 0;
-  S.histRows = 0;
-  $('histBody').innerHTML = '';
-  $('resultPill').style.display = 'none';
+  if (parts.length > 14) {
+    errEl.textContent = '⚠ Maximum 14 numbers allowed.'; errEl.classList.add('show');
+    $('arrInput').classList.add('err'); return null;
+  }
+  if (nums.some(isNaN)) {
+    errEl.textContent = '⚠ All values must be integers.'; errEl.classList.add('show');
+    $('arrInput').classList.add('err'); return null;
+  }
+  if (nums.some(v => v<1 || v>99)) {
+    errEl.textContent = '⚠ Values must be between 1 and 99.'; errEl.classList.add('show');
+    $('arrInput').classList.add('err'); return null;
+  }
+  errEl.classList.remove('show');
+  $('arrInput').classList.remove('err');
+  return nums;
+}
+
+/* ═══════════════ BUILD / RESET ═══════════════ */
+function buildSteps() {
+  if (S.timer) clearInterval(S.timer);
+  const arr = validateInput();
+  if (!arr) return;
+
+  S.arr   = arr;
+  S.steps = S.algo==='dp' ? genDP(arr) : genPatience(arr);
+  S.cur   = 0;
+
+  $('histRows').innerHTML = '';
   $('histCount').textContent = '';
+  $('finalResult').style.display = 'none';
+  $('resultPill').style.display = 'none';
+
   applyStep(0);
   setStatus('ready');
 }
 
-/* ── Reset ────────────────────────────────────────────────── */
 function resetAll() {
-  stopAnim();
-  S.steps = [];
-  S.cur = 0;
-  drawBars({ highlights: {} });
-  if (S.algo === 'dp') drawDP({ dp: new Array(S.arr.length).fill(0), highlights: {} });
-  else drawPiles(null);
-  drawPseudo(-1);
-  $('stepExplain').textContent = 'Click Build Steps to generate steps, then Play or Step to animate.';
-  $('stepExplain').className = 'explain';
+  if (S.timer) clearInterval(S.timer);
+  S.steps = []; S.cur = 0;
+
+  renderBars({hl:{}});
+  if (S.algo==='dp') renderDP({dp:new Array(S.arr.length).fill(0), prev:new Array(S.arr.length).fill(-1), hl:{}});
+  else renderPiles(null);
+  renderPseudo(-1);
+
+  $('stepExplain').innerHTML = 'Click <b>Build Steps</b> to prepare the algorithm, then use <b>▶ Play</b> or <b>▶| Step</b> to watch it run.';
+  $('stepExplain').className = 'step-explain';
   $('stepCounter').textContent = '0 / 0';
-  $('statCmp').textContent = $('statUpd').textContent = $('statBS').textContent = $('statTot').textContent = '0';
-  $('histBody').innerHTML = '';
-  $('resultPill').style.display = 'none';
+  $('stCmp').textContent=$('stUpd').textContent=$('stBS').textContent=$('stTot').textContent='0';
+  $('histRows').innerHTML=''; $('histCount').textContent='';
+  $('finalResult').style.display='none';
+  $('resultPill').style.display='none';
   setStatus('idle');
 }
 
-/* ── Event Listeners ─────────────────────────────────────── */
-$('btnBuild').addEventListener('click', buildSteps);
-$('btnPlay').addEventListener('click', () => { if (!S.steps.length) buildSteps(); else playAnim(); });
-$('btnPause').addEventListener('click', () => { stopAnim(); setStatus('paused'); });
-$('btnStep').addEventListener('click', () => {
-  stopAnim();
-  if (!S.steps.length) { buildSteps(); return; }
-  if (S.cur < S.steps.length - 1) {
-    applyStep(S.cur + 1);
-    if (S.cur === S.steps.length - 1) setStatus('done');
-    else setStatus('paused');
+/* ═══════════════ MODAL ═══════════════ */
+function openModal(type) {
+  const ov = $('modalOverlay'), body = $('modalBody'), title = $('modalTitle');
+  const step = S.steps[S.cur] || null;
+
+  ov.classList.add('open');
+  document.body.style.overflow = 'hidden';
+
+  if (type==='array') {
+    title.textContent = 'Array — Full View';
+    body.innerHTML = `<div class="svg-wrap"><svg id="mArrSVG" style="height:min(65vh,520px);" viewBox="0 0 700 190" preserveAspectRatio="xMidYMid meet"></svg></div>`;
+    renderBars(step, $('mArrSVG'));
+  } else if (type==='dp') {
+    title.textContent = 'DP Table — Full View';
+    body.innerHTML = `
+      <div class="dp-scroll"><table class="dp-tbl" id="mDPTbl" style="font-size:14px;"></table></div>
+      <div class="modal-note" style="margin-top:12px;">
+        <b style="color:var(--teal);">dp[i]</b> = LIS length ending at index i. &nbsp;
+        <b style="color:var(--purple);">prev[i]</b> = predecessor index in the optimal chain. &nbsp;
+        <b style="color:var(--orange);">Orange</b> = current i. &nbsp;
+        <b style="color:var(--yellow);">Yellow</b> = comparing j. &nbsp;
+        <b style="color:var(--teal);">Green</b> = updated / final LIS member.
+      </div>`;
+    renderDP(step, $('mDPTbl'));
+  } else if (type==='piles') {
+    title.textContent = 'Patience Piles — Full View';
+    body.innerHTML = `
+      <div class="svg-wrap"><svg id="mPileSVG" style="height:min(65vh,500px);" viewBox="0 0 700 230" preserveAspectRatio="xMidYMid meet"></svg></div>
+      <div class="modal-note" style="margin-top:10px;">
+        <b style="color:var(--purple);">Purple dashed box</b> = active binary search range. &nbsp;
+        <b style="color:var(--yellow);">▲ mid</b> = current midpoint. &nbsp;
+        <b style="color:var(--teal);">✓ Green</b> = placed here. &nbsp;
+        <b style="color:var(--red);">← pred</b> = predecessor snapshotted before overwrite. &nbsp;
+        <b>[idx]</b> badge = original array index owning that pile top.
+      </div>`;
+    if (step) renderPiles(step, $('mPileSVG'));
   }
-});
-$('btnReset').addEventListener('click', resetAll);
+  ov.onclick = e => { if (e.target===ov) closeModal(); };
+}
+function closeModal() {
+  $('modalOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+document.addEventListener('keydown', e => { if (e.key==='Escape') closeModal(); });
 
-$('btnRandom').addEventListener('click', () => {
-  const n = 6 + Math.floor(Math.random() * 5);
-  const a = Array.from({length: n}, () => 1 + Math.floor(Math.random() * 14));
-  $('arrayInput').value = a.join(', ');
-});
-$('btnWorst').addEventListener('click', () => { $('arrayInput').value = '9, 8, 7, 6, 5, 4, 3, 2, 1'; });
-$('btnBest').addEventListener('click', () => { $('arrayInput').value = '1, 3, 5, 7, 9, 11, 13'; });
+/* ═══════════════ COLLAPSIBLES ═══════════════ */
+function toggleColl(hdr) {
+  const body = hdr.nextElementSibling;
+  const btn  = hdr.querySelector('.coll-btn');
+  const open = body.classList.toggle('open');
+  hdr.classList.toggle('open', open);
+  btn.textContent = open ? 'Collapse' : 'Expand';
+}
+function toggleHist() {
+  const body = $('histBody');
+  const btn  = $('histTogBtn');
+  const open = body.classList.toggle('open');
+  btn.textContent = open ? 'Hide' : 'Show';
+}
 
-$('speedSlider').addEventListener('input', e => {
-  const mult = SPMAP[parseInt(e.target.value) - 1];
-  $('speedLabel').textContent = `Speed: ${mult}x`;
-  if (S.playing) { stopAnim(); playAnim(); }
+/* ═══════════════ INTRO TOGGLE ═══════════════ */
+$('introHdr').addEventListener('click', () => {
+  const body = $('introBody');
+  const btn  = $('iTogBtn');
+  const hdr  = $('introHdr');
+  const open = body.classList.toggle('open');
+  hdr.classList.toggle('open', open);
+  btn.textContent = open ? 'Collapse' : 'Expand';
 });
 
-/* ── Algorithm Tab Switch ────────────────────────────────── */
+/* ═══════════════ ALGO TAB SWITCH ═══════════════ */
 document.querySelectorAll('.tab[data-algo]').forEach(tab => {
   tab.addEventListener('click', () => {
     const algo = tab.dataset.algo;
@@ -1288,170 +1657,98 @@ document.querySelectorAll('.tab[data-algo]').forEach(tab => {
     document.querySelectorAll('.tab[data-algo]').forEach(t => t.classList.remove('active'));
     tab.classList.add('active');
 
-    $('vizTitle').textContent = algo === 'dp' ? 'Visualization — DP O(n²)' : 'Visualization — Patience Sort O(n log n)';
-    $('algoBanner').innerHTML = algo === 'dp'
-      ? 'The <b>DP approach</b> fills a table <b>dp[i]</b> = length of LIS ending at index i. For each pair (j, i) where j &lt; i and A[j] &lt; A[i], we extend: dp[i] = max(dp[i], dp[j]+1). Watch comparisons and table updates unfold step by step.'
-      : 'The <b>Patience Sort</b> uses <b>binary search</b> to place each element on the correct pile in O(log n). Pile tops are always sorted — enabling the binary search. The number of piles at the end equals the LIS length!';
-
-    if (algo === 'dp') {
-      $('dpSection').style.display = 'block';
-      $('patSection').style.display = 'none';
-      $('stat2Lbl').textContent = 'DP Updates';
-      $('colorLegend').innerHTML = `
-        <div class="leg"><div class="ldot" style="background:var(--c1);"></div>Normal</div>
-        <div class="leg"><div class="ldot" style="background:var(--c4);"></div>Active (i)</div>
-        <div class="leg"><div class="ldot" style="background:var(--c3);"></div>Comparing (j)</div>
-        <div class="leg"><div class="ldot" style="background:var(--c2);"></div>LIS / Updated</div>
-        <div class="leg"><div class="ldot" style="background:#555;"></div>Skipped</div>`;
-    } else {
-      $('dpSection').style.display = 'none';
-      $('patSection').style.display = 'block';
-      $('stat2Lbl').textContent = 'Pile Count';
-      $('colorLegend').innerHTML = `
-        <div class="leg"><div class="ldot" style="background:var(--c4);"></div>Current elem</div>
-        <div class="leg"><div class="ldot" style="background:var(--c6);"></div>Search range</div>
-        <div class="leg"><div class="ldot" style="background:var(--c3);"></div>Mid pile</div>
-        <div class="leg"><div class="ldot" style="background:var(--c2);"></div>Placed here</div>`;
-    }
+    const isDP = algo === 'dp';
+    $('algoTag').textContent  = isDP ? 'DP — O(n²)'         : 'Patience — O(n log n)';
+    $('vizTag').textContent   = isDP ? 'DP — O(n²)'         : 'Patience — O(n log n)';
+    $('st2lbl').textContent   = isDP ? 'DP Updates'          : 'Pile Count';
+    $('dpSection').style.display  = isDP ? 'block' : 'none';
+    $('patSection').style.display = isDP ? 'none'  : 'block';
+    $('algoBanner').innerHTML = isDP
+      ? 'The <b>DP approach</b> fills table <b>dp[i]</b> = LIS length ending at A[i]. For each i, scan all j &lt; i: if A[j] &lt; A[i], try dp[i] = dp[j]+1. The largest dp value is the answer.'
+      : 'The <b>Patience Sort</b> uses <b>binary search</b> to place each element on the correct pile in O(log n). Pile tops are always sorted, enabling binary search. Pile count = LIS length. Predecessor pointers give the actual sequence.';
+    renderLegend();
     resetAll();
   });
 });
 
-/* ── Intro toggle ────────────────────────────────────────── */
-$('introHdr').addEventListener('click', () => {
-  $('introBody').classList.toggle('iclosed');
-  $('iToggleBtn').textContent = $('introBody').classList.contains('iclosed') ? 'Expand' : 'Collapse';
+/* ═══════════════ CONTROL EVENTS ═══════════════ */
+$('btnBuild').addEventListener('click', buildSteps);
+$('btnPlay').addEventListener('click', () => { if (!S.steps.length) buildSteps(); else playAnim(); });
+$('btnPause').addEventListener('click', () => { stopAnim(); setStatus('paused'); });
+$('btnStep').addEventListener('click', () => {
+  if (S.timer) clearInterval(S.timer);
+  if (!S.steps.length) { buildSteps(); return; }
+  if (S.cur < S.steps.length-1) {
+    applyStep(S.cur+1);
+    if (S.cur >= S.steps.length-1) setStatus('done');
+    else setStatus('paused');
+  }
+});
+$('btnReset').addEventListener('click', resetAll);
+
+$('btnRandom').addEventListener('click', () => {
+  const n = 6 + Math.floor(Math.random()*5);
+  const a = Array.from({length:n}, () => 1+Math.floor(Math.random()*14));
+  $('arrInput').value = a.join(', ');
+  $('inputErr').classList.remove('show');
+  $('arrInput').classList.remove('err');
+});
+$('btnWorst').addEventListener('click', () => { $('arrInput').value='9, 8, 7, 6, 5, 4, 3, 2, 1'; });
+$('btnBest').addEventListener('click',  () => { $('arrInput').value='1, 3, 5, 7, 9, 11, 13'; });
+
+$('speedSlider').addEventListener('input', e => {
+  const idx  = parseInt(e.target.value)-1;
+  const mult = SPMAP[idx];
+  $('speedBadge').textContent = mult+'×';
+  if (S.status==='playing') { clearInterval(S.timer); S.timer=null; playAnim(); }
 });
 
-/* ── Collapsible helper ──────────────────────────────────── */
-function toggleColl(hdr) {
-  const body = hdr.nextElementSibling;
-  const btn = hdr.querySelector('.coll-btn');
-  body.classList.toggle('coll-closed');
-  btn.textContent = body.classList.contains('coll-closed') ? 'Expand' : 'Collapse';
-}
+$('arrInput').addEventListener('input', () => {
+  $('inputErr').classList.remove('show');
+  $('arrInput').classList.remove('err');
+});
 
-/* ── Complexity Chart ─────────────────────────────────────── */
+/* ═══════════════ COMPLEXITY CHART ═══════════════ */
 function drawChart(maxN) {
-  const svg = $('cplxChart');
-  if (!svg) return;
-  const W = 400, H = 180, PAD = { l:46, r:16, t:18, b:34 };
-  const PW = W - PAD.l - PAD.r, PH = H - PAD.t - PAD.b;
-  maxN = maxN || 20;
-
-  const ns = [];
-  for (let i = 1; i <= maxN; i++) ns.push(i);
-  const n2vals = ns.map(n => n * n);
-  const nlnvals = ns.map(n => Math.max(n * Math.log2(n), 1));
-  const yMax = n2vals[n2vals.length - 1];
-
-  const sx = n => PAD.l + ((n - 1) / (maxN - 1)) * PW;
-  const sy = v => PAD.t + PH - (Math.min(v, yMax) / yMax) * PH;
-
-  let h = '';
-  // Grid
-  for (let i = 0; i <= 4; i++) {
-    const y = PAD.t + (PH / 4) * i;
-    const v = Math.round(yMax * (1 - i / 4));
-    h += `<line x1="${PAD.l}" y1="${y}" x2="${W - PAD.r}" y2="${y}" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>`;
-    h += `<text x="${PAD.l - 4}" y="${y + 4}" text-anchor="end" fill="rgba(183,192,255,.35)" font-size="8">${v > 999 ? (v/1000).toFixed(1)+'k' : v}</text>`;
+  const svg = $('cplxChart'); if (!svg) return;
+  const W=380, H=160, PAD={l:42,r:20,t:16,b:30};
+  const PW = W-PAD.l-PAD.r, PH = H-PAD.t-PAD.b;
+  maxN = parseInt(maxN)||20;
+  const ns=[]; for(let i=1;i<=maxN;i++) ns.push(i);
+  const v2  = ns.map(n=>n*n);
+  const vLn = ns.map(n=>Math.max(n*Math.log2(n),1));
+  const yMax = v2[maxN-1];
+  const sx = n => PAD.l + ((n-1)/(maxN-1))*PW;
+  const sy = v => PAD.t + PH - (Math.min(v,yMax)/yMax)*PH;
+  let h='';
+  for(let i=0;i<=4;i++){
+    const y=PAD.t+(PH/4)*i; const v=Math.round(yMax*(1-i/4));
+    h+=`<line x1="${PAD.l}" y1="${y}" x2="${W-PAD.r}" y2="${y}" stroke="rgba(255,255,255,.05)" stroke-width="1"/>`;
+    h+=`<text x="${PAD.l-4}" y="${y+4}" text-anchor="end" fill="rgba(183,192,255,.3)" font-size="8">${v>999?(v/1000).toFixed(0)+'k':v}</text>`;
   }
-  for (let n = Math.ceil(maxN / 5) * 1; n <= maxN; n += Math.ceil(maxN / 5)) {
-    h += `<text x="${sx(n)}" y="${H - PAD.b + 13}" text-anchor="middle" fill="rgba(183,192,255,.35)" font-size="8">n=${n}</text>`;
+  for(let n=Math.ceil(maxN/5);n<=maxN;n+=Math.ceil(maxN/5)){
+    h+=`<text x="${sx(n)}" y="${H-PAD.b+12}" text-anchor="middle" fill="rgba(183,192,255,.3)" font-size="8">n=${n}</text>`;
   }
-
-  // n² curve
-  const pts2 = ns.map(n => `${sx(n).toFixed(1)},${sy(n2vals[n-1]).toFixed(1)}`).join(' ');
-  h += `<polyline points="${pts2}" fill="none" stroke="var(--c5)" stroke-width="2" opacity=".85"/>`;
-
-  // n log n curve
-  const ptsL = ns.map(n => `${sx(n).toFixed(1)},${sy(nlnvals[n-1]).toFixed(1)}`).join(' ');
-  h += `<polyline points="${ptsL}" fill="none" stroke="var(--c2)" stroke-width="2" opacity=".85"/>`;
-
-  // Labels at end of curves
-  const n2last = sy(n2vals[maxN-1]);
-  const nlnlast = sy(nlnvals[maxN-1]);
-  if (n2last > 12) h += `<text x="${sx(maxN) + 2}" y="${n2last + 4}" fill="var(--c5)" font-size="9" font-weight="600">O(n²)</text>`;
-  if (nlnlast > 12) h += `<text x="${sx(maxN) + 2}" y="${nlnlast + 4}" fill="var(--c2)" font-size="9" font-weight="600">O(n log n)</text>`;
-
+  h+=`<polyline points="${ns.map(n=>`${sx(n).toFixed(1)},${sy(v2[n-1]).toFixed(1)}`).join(' ')}" fill="none" stroke="var(--red)" stroke-width="2" opacity=".85"/>`;
+  h+=`<polyline points="${ns.map(n=>`${sx(n).toFixed(1)},${sy(vLn[n-1]).toFixed(1)}`).join(' ')}" fill="none" stroke="var(--teal)" stroke-width="2" opacity=".85"/>`;
+  const n2y=sy(v2[maxN-1]); const lny=sy(vLn[maxN-1]);
+  if(n2y>16)  h+=`<text x="${sx(maxN)+3}" y="${n2y+4}"  fill="var(--red)"  font-size="9" font-weight="600">n²</text>`;
+  if(lny>16)  h+=`<text x="${sx(maxN)+3}" y="${lny+4}" fill="var(--teal)" font-size="9" font-weight="600">n·log n</text>`;
   svg.innerHTML = h;
   svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
 }
+function updChart(n){ $('chartNLbl').textContent=n; drawChart(n); }
 
-function updChart(n) {
-  $('chartNLbl').textContent = n;
-  drawChart(parseInt(n));
-}
-
-/* ── Modal Expand ─────────────────────────────────────────── */
-function openModal(type) {
-  const overlay  = $('modalOverlay');
-  const content  = $('modalContent');
-  const titleEl  = $('modalTitle');
-  const step     = S.steps[S.cur] || null;
-
-  overlay.classList.add('open');
-  document.body.style.overflow = 'hidden';
-
-  if (type === 'array') {
-    titleEl.textContent = 'Array Visualization — Full View';
-    content.innerHTML = `
-      <div class="svg-box" style="background:rgba(0,0,0,0.25);">
-        <svg id="modalArraySVG" width="100%" style="height:min(60vh,480px);"
-          viewBox="0 0 700 200" preserveAspectRatio="xMidYMid meet"></svg>
-      </div>`;
-    drawBars(step, $('modalArraySVG'));
-
-  } else if (type === 'dp') {
-    titleEl.textContent = 'DP Table — Full View';
-    content.innerHTML = `
-      <div class="dp-scroll" style="max-height:70vh;">
-        <table class="dpt" id="modalDPTable" style="font-size:14px;"></table>
-      </div>
-      <div style="margin-top:12px;font-size:12px;color:var(--muted);line-height:1.7;">
-        <b style="color:var(--c2);">dp[i]</b> = length of longest increasing subsequence ending at index i. &nbsp;
-        <b style="color:var(--c6);">prev[i]</b> = index of the predecessor element in the optimal chain. &nbsp;
-        <b style="color:var(--c4);">Orange</b> = current i. &nbsp;
-        <b style="color:var(--c3);">Yellow</b> = comparing j. &nbsp;
-        <b style="color:var(--c2);">Green</b> = updated / LIS member.
-      </div>`;
-    drawDP(step, $('modalDPTable'));
-
-  } else if (type === 'piles') {
-    titleEl.textContent = 'Patience Piles — Full View';
-    const svgH = 'min(65vh,520px)';
-    content.innerHTML = `
-      <div class="svg-box" style="background:rgba(0,0,0,0.25);">
-        <svg id="modalPilesSVG" width="100%" style="height:${svgH};"
-          viewBox="0 0 700 240" preserveAspectRatio="xMidYMid meet"></svg>
-      </div>
-      <div style="margin-top:10px;font-size:12px;color:var(--muted);line-height:1.7;">
-        <b style="color:var(--c6);">Purple dashed box</b> = active binary search range. &nbsp;
-        <b style="color:var(--c3);">▲ mid</b> = current midpoint. &nbsp;
-        <b style="color:var(--c2);">Green ✓</b> = element placed here. &nbsp;
-        <b style="color:var(--c5);">pred</b> = predecessor pointer snapshotted before overwrite. &nbsp;
-        Small <b>[idx]</b> badge = original array index owning that pile top.
-      </div>`;
-    if (step) drawPiles(step, $('modalPilesSVG'));
-  }
-
-  // Close on backdrop click
-  overlay.onclick = e => { if (e.target === overlay) closeModal(); };
-}
-
-function closeModal() {
-  $('modalOverlay').classList.remove('open');
-  document.body.style.overflow = '';
-}
-
-// Keyboard close
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
-drawPseudo(-1);
-drawBars({ highlights: {} });
-drawDP({ dp: new Array(S.arr.length).fill(0), highlights: {} });
-drawPiles(null);
+/* ═══════════════ INIT ═══════════════ */
+renderPseudo(-1);
+renderBars({hl:{}});
+renderDP({dp:new Array(S.arr.length).fill(0), prev:new Array(S.arr.length).fill(-1), hl:{}});
+renderPiles(null);
+renderLegend();
 setStatus('idle');
 drawChart(20);
+// Set initial speed badge
+$('speedBadge').textContent = SPMAP[parseInt($('speedSlider').value)-1] + '×';
 
 </script>
 </body>
