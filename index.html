@@ -557,9 +557,9 @@
         background: rgba(255, 159, 67, 0.07);
       }
       .dc-j {
-        color: var(--yellow);
+        color: var(--purple);
         font-weight: 700;
-        background: rgba(255, 209, 102, 0.07);
+        background: rgba(167, 139, 250, 0.1);
       }
       .dc-upd {
         color: var(--teal);
@@ -1006,14 +1006,14 @@
       <p>Longest Increasing Subsequence | Mohammed Hesham</p>
     </div>
 
-    <!-- INTRO (collapsed by default) -->
+    <!-- INTRO -->
     <div class="intro-wrap">
       <div class="intro-card">
-        <div class="intro-hdr" id="introHdr">
-          <h2>What is LIS? - Click to expand</h2>
-          <button class="itog" id="iTogBtn">Expand</button>
+        <div class="intro-hdr open" id="introHdr">
+          <h2>What is LIS?</h2>
+          <button class="itog" id="iTogBtn">Collapse</button>
         </div>
-        <div class="intro-body" id="introBody">
+        <div class="intro-body open" id="introBody">
           <div class="igrid">
             <div>
               <h3>The Problem</h3>
@@ -1090,7 +1090,7 @@
           <input
             type="text"
             id="arrInput"
-            value="10, 9, 2, 5, 3, 7, 25, 18"
+            value="2, 1, 2, 6, 4, 5"
             class="mb6"
           />
           <div class="input-err" id="inputErr">Invalid input.</div>
@@ -1465,7 +1465,7 @@
       /*  STATE  */
       const S = {
         algo: "dp",
-        arr: [10, 9, 2, 5, 3, 7, 25, 18],
+        arr: [2, 1, 2, 6, 4, 5],
         steps: [],
         cur: 0,
         status: "idle", // idle | ready | playing | paused | done
@@ -1900,7 +1900,7 @@
 
         const COL = {
           i: "#ff9f43",
-          j: "#ffd166",
+          j: "#a78bfa",
           upd: "#64f0c8",
           lis: "#64f0c8",
           skip: "#2a2d42",
@@ -1964,6 +1964,7 @@
         const arr = S.arr;
         const n = arr.length;
         const dp = (step && step.dp) || new Array(n).fill(0);
+        const prev = (step && step.prev) || new Array(n).fill(-1);
         const hl = (step && step.hl) || {};
         const tbl = tblEl || $("dpTbl");
 
@@ -1987,6 +1988,9 @@
         h += '</tr><tr><th style="color:var(--teal);">dp[i]</th>';
         for (let k = 0; k < n; k++)
           h += `<td class="${cls(k)}" style="font-size:14px;font-weight:800;">${dp[k] > 0 ? dp[k] : "-"}</td>`;
+        h += '</tr><tr><th class="dc-prev">prev[i]</th>';
+        for (let k = 0; k < n; k++)
+          h += `<td class="${cls(k)} dc-prev" style="font-weight:700;">${prev[k] >= 0 ? prev[k] : "-"}</td>`;
         h += "</tr>";
         tbl.innerHTML = h;
       }
@@ -2194,7 +2198,7 @@
           $("arrayLegend").innerHTML = `
       <div class="leg"><div class="ldot" style="background:var(--blue);"></div>Normal</div>
       <div class="leg"><div class="ldot" style="background:var(--orange);"></div>Active (i)</div>
-      <div class="leg"><div class="ldot" style="background:var(--yellow);"></div>Comparing (j)</div>
+      <div class="leg"><div class="ldot" style="background:var(--purple);"></div>Comparing (j)</div>
       <div class="leg"><div class="ldot" style="background:var(--teal);"></div>Updated / LIS</div>
       <div class="leg"><div class="ldot" style="background:rgba(255,255,255,.15);"></div>Skipped</div>`;
         } else {
@@ -2209,59 +2213,99 @@
       function renderFocusExplain(step) {
         const box = $("focusExplain");
         if (!box) return;
-        if (
-          !step ||
-          S.algo !== "dp" ||
-          step.i === undefined ||
-          step.j === undefined ||
-          step.j < 0
-        ) {
-          if (step && step.type === "done" && step.lisVals)
-            box.innerHTML = `<div style="text-align:center;color:var(--teal);font-weight:700;">LIS = [${step.lisVals.join(", ")}] &nbsp;|&nbsp; Length = ${step.lisLen}</div>`;
-          else
-            box.innerHTML = `<span style="color:var(--muted);font-size:11.5px;">Comparison details appear here during the inner loop.</span>`;
+        if (!step) {
+          box.innerHTML = `<span style="color:var(--muted);font-size:11.5px;">Comparison details appear here during the inner loop.</span>`;
           return;
         }
-        const j = step.j,
-          i = step.i;
-        const aj = S.arr[j],
-          ai = S.arr[i];
-        const dpJ = step.dp ? step.dp[j] : 1;
-        const dpI = step.dp ? step.dp[i] : 1;
-        const canExtend = aj < ai;
-        const wouldImprove = canExtend && dpJ + 1 > dpI;
-        const op = canExtend ? "<" : "≥";
-        const opCol = canExtend ? "var(--teal)" : "var(--red)";
-        const isUpdate = step.type === "upd";
+
+        if (step.type === "done" && step.lisVals) {
+          box.innerHTML = `<div style="text-align:center;color:var(--teal);font-weight:700;">LIS = [${step.lisVals.join(", ")}] &nbsp;|&nbsp; Length = ${step.lisLen}</div>`;
+          return;
+        }
+
+        if (S.algo === "dp") {
+          if (step.i === undefined || step.j === undefined || step.j < 0) {
+            box.innerHTML = `<span style="color:var(--muted);font-size:11.5px;">Comparison details appear here during the inner loop.</span>`;
+            return;
+          }
+
+          const j = step.j,
+            i = step.i;
+          const aj = S.arr[j],
+            ai = S.arr[i];
+          const dpJ = step.dp ? step.dp[j] : 1;
+          const dpI = step.dp ? step.dp[i] : 1;
+          const canExtend = aj < ai;
+          const op = canExtend ? "<" : ">=";
+          const opCol = canExtend ? "var(--teal)" : "var(--red)";
+          const isUpdate = step.type === "upd";
+
+          box.innerHTML = `
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+        <div style="flex:1;min-width:110px;border-radius:9px;border:1px solid rgba(167,139,250,0.35);background:rgba(167,139,250,0.1);padding:10px 12px;">
+          <div style="font-size:9.5px;color:var(--muted);margin-bottom:4px;font-weight:600;letter-spacing:.5px;">PREDECESSOR j = ${j}</div>
+          <div style="font-size:20px;font-weight:800;color:var(--purple);line-height:1;">A[${j}] = ${aj}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:5px;">dp[${j}] = <b style="color:var(--purple);">${dpJ}</b></div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:3px;flex-shrink:0;">
+          <div style="font-size:26px;font-weight:800;color:${opCol};line-height:1;">${op}</div>
+          <div style="font-size:9px;color:var(--muted);">${canExtend ? "can extend" : "cannot extend"}</div>
+        </div>
+        <div style="flex:1;min-width:110px;border-radius:9px;border:1px solid rgba(255,159,67,0.35);background:rgba(255,159,67,0.07);padding:10px 12px;">
+          <div style="font-size:9.5px;color:var(--muted);margin-bottom:4px;font-weight:600;letter-spacing:.5px;">CURRENT i = ${i}</div>
+          <div style="font-size:20px;font-weight:800;color:var(--orange);line-height:1;">A[${i}] = ${ai}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:5px;">dp[${i}] = <b style="color:var(--orange);">${dpI}</b></div>
+        </div>
+      </div>
+      <div style="margin-top:9px;padding:8px 12px;border-radius:8px;background:${isUpdate ? "rgba(78,227,193,0.09)" : canExtend ? "rgba(255,255,255,0.04)" : "rgba(255,107,129,0.07)"};border:1px solid ${isUpdate ? "rgba(78,227,193,0.3)" : canExtend ? "rgba(255,255,255,0.08)" : "rgba(255,107,129,0.2)"};">
+        ${
+          isUpdate
+            ? `<span style="color:var(--teal);font-weight:700;">dp[${i}] updated: dp[${j}] + 1 = ${dpJ} + 1 = <span style="font-size:15px;">${dpJ + 1}</span></span>`
+            : canExtend
+              ? `<span style="color:var(--muted);">A[${j}] &lt; A[${i}] so it can extend, but dp[${j}]+1 = ${dpJ + 1} does not improve dp[${i}] = ${dpI}.</span>`
+              : `<span style="color:var(--red);">A[${j}] >= A[${i}] so it cannot extend index ${i}.</span>`
+        }
+      </div>`;
+          return;
+        }
+
+        if (!["bs", "bsL", "bsR"].includes(step.type) || step.mid === undefined || step.mid < 0) {
+          box.innerHTML = `<span style="color:var(--muted);font-size:11.5px;">Comparison details appear here during the inner loop.</span>`;
+          return;
+        }
+
+        const mid = step.mid;
+        const currentVal = step.val;
+        const midVal = step.tops && step.tops[mid] !== undefined ? step.tops[mid] : "?";
+        const goRight = step.type === "bsR";
+        const goLeft = step.type === "bsL";
+        const op = currentVal > midVal ? ">" : "<=";
+        const opCol = currentVal > midVal ? "var(--teal)" : "var(--red)";
 
         box.innerHTML = `
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-      <!-- j box -->
-      <div style="flex:1;min-width:110px;border-radius:9px;border:1px solid rgba(255,209,102,0.35);background:rgba(245,200,106,0.07);padding:10px 12px;">
-        <div style="font-size:9.5px;color:var(--muted);margin-bottom:4px;font-weight:600;letter-spacing:.5px;">PREDECESSOR j = ${j}</div>
-        <div style="font-size:20px;font-weight:800;color:var(--yellow);line-height:1;">A[${j}] = ${aj}</div>
-        <div style="font-size:11px;color:var(--muted);margin-top:5px;">dp[${j}] = <b style="color:var(--yellow);">${dpJ}</b></div>
+      <div style="flex:1;min-width:110px;border-radius:9px;border:1px solid rgba(255,159,67,0.35);background:rgba(255,159,67,0.07);padding:10px 12px;">
+        <div style="font-size:9.5px;color:var(--muted);margin-bottom:4px;font-weight:600;letter-spacing:.5px;">CURRENT VALUE</div>
+        <div style="font-size:20px;font-weight:800;color:var(--orange);line-height:1;">A[${step.i}] = ${currentVal}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:5px;">search range = [${step.lo}, ${step.hi - 1}]</div>
       </div>
-      <!-- operator -->
       <div style="display:flex;flex-direction:column;align-items:center;gap:3px;flex-shrink:0;">
         <div style="font-size:26px;font-weight:800;color:${opCol};line-height:1;">${op}</div>
-        <div style="font-size:9px;color:var(--muted);">${canExtend ? "can extend" : "cannot extend"}</div>
+        <div style="font-size:9px;color:var(--muted);">compare to mid</div>
       </div>
-      <!-- i box -->
-      <div style="flex:1;min-width:110px;border-radius:9px;border:1px solid rgba(255,159,67,0.35);background:rgba(255,159,67,0.07);padding:10px 12px;">
-        <div style="font-size:9.5px;color:var(--muted);margin-bottom:4px;font-weight:600;letter-spacing:.5px;">CURRENT i = ${i}</div>
-        <div style="font-size:20px;font-weight:800;color:var(--orange);line-height:1;">A[${i}] = ${ai}</div>
-        <div style="font-size:11px;color:var(--muted);margin-top:5px;">dp[${i}] = <b style="color:var(--orange);">${dpI}</b></div>
+      <div style="flex:1;min-width:110px;border-radius:9px;border:1px solid rgba(199,125,255,0.35);background:rgba(199,125,255,0.07);padding:10px 12px;">
+        <div style="font-size:9.5px;color:var(--muted);margin-bottom:4px;font-weight:600;letter-spacing:.5px;">MID PILE = ${mid}</div>
+        <div style="font-size:20px;font-weight:800;color:var(--purple);line-height:1;">tails[${mid}] = ${midVal}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:5px;">binary search midpoint</div>
       </div>
     </div>
-    <!-- outcome -->
-    <div style="margin-top:9px;padding:8px 12px;border-radius:8px;background:${isUpdate ? "rgba(78,227,193,0.09)" : canExtend ? "rgba(255,255,255,0.04)" : "rgba(255,107,129,0.07)"};border:1px solid ${isUpdate ? "rgba(78,227,193,0.3)" : canExtend ? "rgba(255,255,255,0.08)" : "rgba(255,107,129,0.2)"};">
+    <div style="margin-top:9px;padding:8px 12px;border-radius:8px;background:${goRight ? "rgba(78,227,193,0.09)" : goLeft ? "rgba(255,107,129,0.07)" : "rgba(255,255,255,0.04)"};border:1px solid ${goRight ? "rgba(78,227,193,0.3)" : goLeft ? "rgba(255,107,129,0.2)" : "rgba(255,255,255,0.08)"};">
       ${
-        isUpdate
-          ? `<span style="color:var(--teal);font-weight:700;">✓ dp[${i}] updated: dp[${j}] + 1 = ${dpJ} + 1 = <span style="font-size:15px;">${dpJ + 1}</span></span>`
-          : canExtend
-            ? `<span style="color:var(--muted);">A[${j}] &lt; A[${i}] — can extend, but dp[${j}]+1 = ${dpJ + 1} ≤ dp[${i}] = ${dpI}, no improvement needed.</span>`
-            : `<span style="color:var(--red);">✗ A[${j}] ≥ A[${i}] — not strictly increasing, cannot extend through index ${j}.</span>`
+        goRight
+          ? `<span style="color:var(--teal);font-weight:700;">${currentVal} > ${midVal}, so move right and set lo = ${step.lo}.</span>`
+          : goLeft
+            ? `<span style="color:var(--red);font-weight:700;">${currentVal} <= ${midVal}, so move left and set hi = ${step.hi}.</span>`
+            : `<span style="color:var(--muted);">Checking whether ${currentVal} should go to the left or right of pile ${mid}.</span>`
       }
     </div>`;
       }
